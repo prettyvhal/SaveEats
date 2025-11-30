@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaveEats Login</title>
+  <title>Sign Up</title>
   <link rel="stylesheet" href="Scripts/site/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
 
@@ -59,7 +59,34 @@
 
   <div class="loading-screen">
     <div class="loading-animation"></div>
-      <div class="wave"></div>
+      <div class="background-scene">
+        <div class="waves back">
+          <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+            <defs>
+              <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+            </defs>
+            <g class="wave-group">
+              <use xlink:href="#gentle-wave" x="48" y="5"></use>
+              <use xlink:href="#gentle-wave" x="20" y="7"></use>
+              <use xlink:href="#gentle-wave" x="80" y="17"></use>
+            </g>
+          </svg>
+        </div>
+        
+        <div class="waves front">
+          <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+            <defs>
+              <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+            </defs>
+            <g class="wave-group">
+              <use xlink:href="#gentle-wave" x="60" y="10"></use>
+              <use xlink:href="#gentle-wave" x="30" y="23"></use>
+              <use xlink:href="#gentle-wave" x="48" y="5"></use>
+            </g>
+          </svg>
+        </div>
+        
+      </div>
   </div>
 
     <!-- Master Toggle -->
@@ -132,31 +159,30 @@
     <div class="window-container main-window">
         <div class="login-frame">
             <div class="window-header">
-                <span class="window-title">Hi there, Welcome to SaveEats</span>
+                <span class="window-title">Sign up to create your account!</span>
             </div>
 
             <div class="window-content">
                 <div class="intro-section">
-                    <h2><span class="cad-name-special">Welcome!</span></h2>
-                    <p>Login to continue</p>
+                    <h2><span class="cad-name-special">Creating...</span></h2>
+                    <p>Please enter your details</p>
                 </div>
                 <div class="login-section">
-                    <form id="loginForm">
-                        <div class="form-grid">
-                            <input type="email" id="login-email" placeholder="Email address" required>
-                            <input type="password" id="login-password" placeholder="Password" required>
+                    <form id="SignUpForm">
+                        <div class="form-grid1">
+                            <input type="username" id="username" placeholder="Username" required>
+                            <input type="email" id="signup-email" placeholder="Email address" required>
+                            <input type="password" id="signup-password" placeholder="Password" required>
+                            <input type="password" id="password_rep" placeholder="Repeat your Password" required>
                         </div>
 
-                        <div class="form-grid1">
-                            <button type="submit" class="submit-btn">Login</button>
-                            <button type="button" id="googleLoginBtn" class="submit-btn1">
-                                Login with Google
+                        <div class="form-grid">
+                            <button type="create" class="submit-btn">Create Account</button>
+                            <button type="button" id="restoAcc" class="submit-btn1">
+                                Create Account For Restaurant
                             </button>
                         </div>
                     </form>
-                    <p>
-                        Don’t have an account? <a href="sign-up.html">Create one</a>
-                    </p>
                 </div>
 
             </div>

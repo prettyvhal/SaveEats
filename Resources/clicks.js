@@ -8,13 +8,13 @@ let hoverAudioBuffer = null;
 let firstInteractionOccurred = false;
 
 const clickAudioFilePaths = [
-    'resources/sfx/click_sfx.mp3',
-    'resources/sfx/click_general.mp3',
-    'resources/sfx/click_close.mp3',
+    'Resources/sfx/click_sfx.mp3',
+    'Resources/sfx/click_general.mp3',
+    'Resources/sfx/click_close.mp3',
 ];
 const clickAudioPlayers = [];
-const hoverAudioFilePath = 'resources/sfx/hover.mp3';
-const clickToggle = 'resources/sfx/click-toggle.mp3';
+const hoverAudioFilePath = 'Resources/sfx/hover.mp3';
+const clickToggle = 'Resources/sfx/click-toggle.mp3';
 
 let audioEnabled = getCookie("audioEnabled") !== "false"; // default ON
 

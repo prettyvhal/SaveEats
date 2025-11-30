@@ -5,8 +5,8 @@ const hueSlider = document.getElementById("hue-slider");
 let hideTimeout;
 
 const sfxSelects = [
-    new Audio('resources/sfx/color.mp3'),
-    new Audio('resources/sfx/color1.mp3')
+    new Audio('Resources/sfx/color.mp3'),
+    new Audio('Resources/sfx/color1.mp3')
 ];
 
 // Palette variable sets
@@ -176,6 +176,7 @@ palettes.forEach(palette => {
         const choice = palette.dataset.palette;
         const paletteIcon = paletteBtn.querySelector("i");
         paletteIcon.classList.add("switching");
+        
 
         if (choice === "hue-shift") {
             const newHue = Math.floor(Math.random() * 360);
@@ -193,7 +194,7 @@ palettes.forEach(palette => {
         setTimeout(() => {
             paletteIcon.classList.remove("switching");
         }, 800);
-        tryShowModalMessage('color');
+        //tryShowModalMessage('color');
 
         const randomSFX = sfxSelects[Math.floor(Math.random() * sfxSelects.length)];
         playSound(randomSFX);

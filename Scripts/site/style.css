@@ -32,25 +32,25 @@ body {
 }
 
 :root {
-  --yellow: #ffef5b;
-  --orange: #ffa600;
-  --orangeL: #ffdb65;
-  --orangeL1: #fbce3d;
-  --orangeHL: #ffeed0;
-  --orangeD: #fa8b4b;
-  --ptext: #4a3101;
-  --light-gray: #f2f2f2;
-  --dark-gray: #4a3101;
-  --icon-drop-shadow: #be976b;
-  --light-orange: #fff6e7;
-  --light-orange1: #fffbf4;
-  --dark-orange: #6e4800;
-  --dark-orange1: #cb682e;
+  --yellow: #e6f9df;
+  --orange: #10b981;
+  --orangeL: #34d399;
+  --orangeL1: #86efac;
+  --orangeHL: #c5fcd8;
+  --orangeD: #059669;
+  --ptext: #053427;
+  --light-gray: #f7fff9;
+  --dark-gray: #063e2f;
+  --icon-drop-shadow: #64bd9c;
+  --light-orange: #f0fff7;
+  --light-orange1: #f0fff7;
+  --dark-orange: #053427;
+  --dark-orange1: #059669;
+  --mobile-icon-item: #c5fcd8c5;
   --bg-color: #a3e4f9;
   --wave: #0cbaff;
   --radius: 15px;
   --radius1: 20px;
-  --mobile-icon-item: #ffeed0c5;
   --cursor: #ffeed050;
   --clicky: scale(0.95);
   --clicky1: scale(0.9);
@@ -452,7 +452,7 @@ body {
   transition: background-color 0.2s ease;
 }
 
-.icon-about, .icon-links, .icon-projects, .icon-faq, .icon-contacts {
+/*.icon-about, .icon-links, .icon-projects, .icon-faq, .icon-contacts {
   position: relative;
   width: 60px;
   height: 60px;
@@ -480,7 +480,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--orange);  /* Fill color */
+  background-color: var(--orange);
   mask: url('resources/svg/icon_about.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_about.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -489,7 +489,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--dark-orange); /* Outline color */
+  background-color: var(--dark-orange);
   mask: url('resources/svg/icon_about_l.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_about_l.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -499,7 +499,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--orange);  /* Fill color */
+  background-color: var(--orange);
   mask: url('resources/svg/icon_links.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_links.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -508,7 +508,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--dark-orange); /* Outline color */
+  background-color: var(--dark-orange);
   mask: url('resources/svg/icon_links_l.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_links_l.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -518,7 +518,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--orange);  /* Fill color */
+  background-color: var(--orange);
   mask: url('resources/svg/icon_projects.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_projects.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -527,7 +527,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--dark-orange); /* Outline color */
+  background-color: var(--dark-orange);
   mask: url('resources/svg/icon_projects_l.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_projects_l.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -537,7 +537,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--orange);  /* Fill color */
+  background-color: var(--orange);
   mask: url('resources/svg/icon_faq.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_faq.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -546,7 +546,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--dark-orange); /* Outline color */
+  background-color: var(--dark-orange);
   mask: url('resources/svg/icon_faq_l.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_faq_l.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -556,7 +556,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--orange);  /* Fill color */
+  background-color: var(--orange);
   mask: url('resources/svg/icon_contacts.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_contacts.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
@@ -565,11 +565,11 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--dark-orange); /* Outline color */
+  background-color: var(--dark-orange);
   mask: url('resources/svg/icon_contacts_l.svg') no-repeat center / contain;
   -webkit-mask: url('resources/svg/icon_contacts_l.svg') no-repeat center / contain;
   transition: background-color 0.2s ease;
-}
+}*/
 
 /*.icon-item:hover .icon {
   background-color: var(--orangeHL);
@@ -809,6 +809,14 @@ body {
   margin-top: 20px;
   font-weight: 700;
   text-align: left;
+}
+
+.login-section a {
+  color: var(--ptext);
+}
+
+.login-section a:hover {
+  color: var(--dark-orange1);
 }
 
 .login-section h3 {
@@ -1348,11 +1356,13 @@ html {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
 }
 
 .form-grid input,
-.form-grid textarea {
+.form-grid textarea,
+.form-grid1 input,
+.form-grid1 textarea {
   background-color: var(--light-orange);
   border: 2px solid var(--orangeL1);
   border-radius: 6px;
@@ -1366,18 +1376,23 @@ html {
 }
 
 .form-grid input:active,
-.form-grid textarea:active {
+.form-grid textarea:active,
+.form-grid1 input:active,
+.form-grid1 textarea:active {
   transform: var(--clicky);
 }
 
 .form-grid input:focus,
-.form-grid textarea:focus {
+.form-grid textarea:focus,
+.form-grid1 input:focus,
+.form-grid1 textarea:focus {
   border-color: var(--orange);
   background-color: var(--orangeHL);
 }
 
 /* Make textarea span full width */
-.form-grid textarea {
+.form-grid textarea,
+.form-grid1 textarea {
   grid-column: span 2;
   min-height: 80px;
 }
@@ -1723,8 +1738,20 @@ html {
     line-height: 1.0em;
   }
 
+  .intro-section h2 {
+    font-size: 3em;
+  }
+
   .nav-icons {
     margin: -10px;
+  }
+
+  .form-grid1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
   .profile-photo {

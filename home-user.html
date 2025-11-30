@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaveEats</title>
+  <link rel="stylesheet" href="Scripts/site/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <link href="Resources/master-toggle.css" rel="stylesheet">
+  <link href="Resources/clicks-toggle.css" rel="stylesheet">
+  <link href="Resources/color-palette.css" rel="stylesheet">
+
+  <!-- CSS for dark mode toggle button -->
+  <link href="Resources/dark-mode-toggle.css" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <!-- Dark Reader API via jsDelivr CDN-->
+  <script src="Resources/darkreader.min.js"></script>
+  <meta name="theme-color" content="#a3e4f9" />
+  <link href="Resources/icon1.png" rel="shortcut icon" type="image/x-icon" />
+  <link href="Resources/icon1.png" rel="apple-touch-icon" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <noscript>
+    <style>
+      body {
+        overflow: auto !important;
+      }
+
+      #main {
+        opacity: 1.0 !important;
+        transform: none !important;
+        transition: none !important;
+        filter: none !important;
+      }
+
+      #main>.inner>section {
+        opacity: 1.0 !important;
+        transform: none !important;
+        transition: none !important;
+        filter: none !important;
+      }
+
+      #main>.inner>section>* {
+        opacity: 1.0 !important;
+        transform: none !important;
+        transition: none !important;
+        filter: none !important;
+      }
+    </style>
+  </noscript>
+</head>
+
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 40 40"
+    display="none" width="0" height="0">
+    <symbol id="icon-8c067c2a901577560a630158598faca2" viewBox="0 0 40 40">
+      <path
+        d="M36.1,23.4c-0.8,3.5-2.6,6.1-5.3,8.5c-6.4,5.9-13.8,4.1-20.1-0.8 c-2.1-1.6-3.4-3.3-5-5.3c-0.5-0.6-1.7-1.7-1.1-2.5c0.1-0.2,0.9-0.6,1.1-0.6c1-0.2,0.9,0.5,1.4,1c2.6,3.4,5.4,6.1,9.3,8 c2.4,1.2,4.2,1.5,6.9,1.4c4.1-0.3,8.9-5.3,10.1-9c0.3-1.1,0.4-2.3,0.7-3.3c0.1-0.2,0.3-0.5,0.5-0.6c0.5-0.1,1.7-0.1,1.8,0.5 C36.6,21.2,36.3,22.7,36.1,23.4z M27.3,21.2c-0.5,0.2-1.1-0.1-1.3-0.5c-0.3-0.6-0.5-2-0.7-2.7c-0.8-3.7-1.4-7.7-3.6-10.9 c-0.2-0.3-0.6-0.3-0.8-0.4c-0.4-0.3-0.4-1.3-0.2-1.7c0-0.1,0.8-0.6,0.9-0.6c0.3-0.1,0.6,0,0.9,0.1c0.2,0.1,1.2,1,1.3,1.3 c2.3,3.7,2.9,7.3,3.8,11.5c0.2,0.7,0.7,2,0.7,2.6c0,0.3,0,0.6-0.2,0.8C28.1,20.7,27.4,21.2,27.3,21.2z M14.1,21.6 c-0.3-0.4-0.3-1.6-0.4-2.1c-0.6-3.4-2.3-7.1-4.4-9.9C9.1,9.3,8,8.2,7.9,7.9c-0.1-0.4-0.1-1,0.2-1.3c0.3-0.2,1.3-0.3,1.6-0.2 c0.4,0.2,0.8,0.8,1.1,1.1c2.4,2.8,4.3,6.5,5.1,10.2c0.2,1,0.6,2.8,0.4,3.7C16.2,22.2,14.5,22.1,14.1,21.6z" />
+    </symbol>
+  </svg>
+
+  <div id="cursorCircle"></div>
+
+  <div class="loading-screen">
+    <div class="loading-animation"></div>
+      <div class="wave"></div>
+  </div>
+
+    <!-- Master Toggle -->
+    <button class="master-toggle">
+      <i class="fa-solid fa-angles-left"></i>
+    </button>
+  
+    <!-- Hidden buttons -->
+    <div class="extra-buttons">
+      <button class="toggle-modal-btn">
+        <i class="fa-solid fa-square-minus"></i>
+      </button>
+      
+      <button class="palette-btn">
+        <i class="fa-solid fa-brush"></i>
+      </button>
+      
+      <button class="clicks-btn">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+
+      <button class="dark-mode-toggle">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  
+  <!-- Palette Options -->
+  <div class="palette-options">
+    <div class="palette" data-palette="red"></div>
+    <div class="palette" data-palette="orange"></div>
+    <div class="palette" data-palette="green"></div>
+    <div class="palette" data-palette="blue"></div>
+    <div class="palette" data-palette="purple"></div>
+    <div class="palette" data-palette="pink"></div>
+    <div class="palette" data-palette="hue-shift"></div>
+    <div class="hue-shift-control">
+      <input type="range" id="hue-slider" min="0" max="360" value="0">
+    </div>
+  </div>
+
+  <div class="background-scene">
+    <div class="waves back">
+      <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+        <defs>
+          <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+        </defs>
+        <g class="wave-group">
+          <use xlink:href="#gentle-wave" x="48" y="5"></use>
+          <use xlink:href="#gentle-wave" x="20" y="7"></use>
+          <use xlink:href="#gentle-wave" x="80" y="17"></use>
+        </g>
+      </svg>
+    </div>
+    
+    <!-- <div class="boat">
+      <div class="sail1"></div>
+      <div class="sail2"></div>
+      <div class="hull"></div>
+    </div> -->
+    
+    <div class="waves front">
+      <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+        <defs>
+          <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+        </defs>
+        <g class="wave-group">
+          <use xlink:href="#gentle-wave" x="60" y="10"></use>
+          <use xlink:href="#gentle-wave" x="30" y="23"></use>
+          <use xlink:href="#gentle-wave" x="48" y="5"></use>
+        </g>
+      </svg>
+    </div>
+    
+  </div>
+
+  <div id="mobile-banner">
+      <img src="Resources/icon.png" alt="Paolo Cadag" class="profile-photo-banner">
+      <span id="banner-text">
+          <b class="cad-name">📢 Hey there!</b>
+          this site is best experienced on desktop
+      </span>
+      <button class="close-btn-notif" id="close-banner">&times;</button>
+  </div>
+
+  <div id="modal-notify" class="modal-notify hidden">
+      <img src="Resources/icon.png" alt="Paolo Cadag" class="profile-photo-banner">
+      <span id="modal-notify-text">
+          <!-- Dynamic text goes here -->
+      </span>
+      <button class="close-btn-notif" id="close-modal-notify">&times;</button>
+  </div>
+
+  <div class="window-container main-window">
+    <div class="window-frame">
+      <div class="window-header">
+        <span class="window-title">home</span>
+      </div>
+      <div class="window-content">
+        <div class="intro-section">
+          <h1>hi! i'm <span class="cad-name-special">cadlaxa</span></h1>
+          <p>student, editor, and developer</p>
+        </div>
+        <div class="nav-icons">
+          <div class="icon-item" data-target="about-modal">
+            <div class="icon-about"></div>
+            <span>about</span>
+          </div>
+          <div class="icon-item" data-target="links-modal">
+            <div class="icon-links"></div>
+            <span>links</span>
+          </div>
+          <div class="icon-item" data-target="project-modal">
+            <div class="icon-projects"></div>
+            <span>projects</span>
+          </div>
+          <div class="icon-item" data-target="faq-modal">
+            <div class="icon-faq"></div>
+            <span>faq</span>
+          </div>
+          <div class="icon-item" data-target="contact-modal">
+            <div class="icon-contacts"></div>
+            <span>contact</span>
+          </div>
+        </div>
+      </div>
+      <div class="social-links">
+        <p class="copyright">&copy; 2025 cadlaxa</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ABOUT -->
+  <div id="about-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-frame">
+        <div class="window-header handle">
+          <span class="window-title">About</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="profile-container">
+            <div class="profile-header">
+              <img src="Resources/icon.png" alt="Paolo Cadag" class="profile-photo">
+              <div class="profile-name">
+                <h1><span class="cad-name">Paolo Cadag</span></h1>
+                <p><span class="sub-name">aka cadlaxa</span></p>
+              </div>
+            </div>
+          </div>
+          <div class="about-section">
+            <h3>PH-based editor, developer, and vsynth user/developer</h3>
+            <p>Current developer at <a href="https://www.openutau.com/" target="_blank"
+                rel="noopener noreferrer">OPENUTAU</a></p>
+            <h1><span class="cad-name">Hi! I'm Cadlaxa, I...</span></h1>
+            <ul>
+              <li>develop <strong>OPENUTAU Phonemizers</strong>,</li>
+              <li>create <strong>drawings</strong> for fun,</li>
+              <li>create <strong>vocal covers</strong> with my voicebank,</li>
+              <li>love <strong>music</strong> (especially Vocaloid, UTAU, and VSynth),</li>
+              <li>do <strong>front-end</strong> and <strong>back-end</strong> development</li>
+            </ul>
+          </div>
+          <div class="about-info-section">
+            <h1><span class="cad-name">Education</span></h1>
+            <ul>
+              <li>Bachelor of Science in Computer Science</li>
+            </ul>
+          </div>
+          <div class="about-info-section">
+            <h1><span class="cad-name">Other interests</span></h1>
+            <ul>
+              <li>Playing gacha games</li>
+              <li>Watching anime</li>
+              <li>Listening to music</li>
+              <li>Reading Manhwa and Webtoon comics</li>
+            </ul>
+          </div>
+          <div class="about-info-section">
+            <h1><span class="cad-name">Language Proficiency</span></h1>
+            <ul>
+              <li>I have native fluency in <strong>Filipino</strong> and in <strong>English</strong>
+                and can speak both languages</li>
+              <li>I have basic knowledge of <strong>English phonetics</strong> especially in IPA, Xsampa and ARPABET
+              </li>
+              <li>I have basic phonetic knowledge of <strong>Japanese, Tagalog, Korean, Chinese,</strong>and
+                <strong>Spanish</strong>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar"></div>
+    </div>
+  </div>
+
+  <!-- LINKS -->
+  <div id="links-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-links">
+        <div class="window-header handle">
+          <span class="window-title">Links</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="profile-container">
+            <div class="profile-header">
+              <div class="profile-name">
+                <h1><span class="cad-name">chunlinks...</span></h1>
+              </div>
+            </div>
+          </div>
+            <div class="link-grid-container">
+
+              <div class="link-item" data-link="https://discord.com/users/287149082877886464">
+                <div class="link-favicon">
+                  <i class="fab fa-discord"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Discord</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="https://www.youtube.com/@cadlaxa">
+                <div class="link-favicon">
+                  <i class="fab fa-youtube"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">YouTube</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="https://github.com/Cadlaxa">
+                <div class="link-favicon">
+                  <i class="fab fa-github"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Github</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="mailto:cactusmusic30@gmail.com">
+                <div class="link-favicon">
+                  <i class="fa-solid fa-envelope-open-text"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Email</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="https://bsky.app/profile/cadlaxa.bsky.social">
+                <div class="link-favicon">
+                  <i class="fab fa-bluesky"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Bluesky</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="mailto:jhonpaolo.cadag@cvsu.edu.ph">
+                <div class="link-favicon">
+                  <i class="fa-solid fa-envelope-circle-check"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Uni Email</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="https://ko-fi.com/cadlaxa">
+                <div class="link-favicon">
+                  <i class="fa-solid fa-mug-hot"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Kofi</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="https://www.reddit.com/user/cadlaxa/">
+                <div class="link-favicon">
+                  <i class="fa-brands fa-reddit"></i>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Reddit</div>
+                </div>
+              </div>
+
+              <div class="link-item" data-link="https://cadlaxa.straw.page/">
+                <div class="link-favicon">
+                  <svg aria-labelledby="icons01-icon-6-title">
+                    <use xlink:href="#icon-8c067c2a901577560a630158598faca2"></use>
+                  </svg></a></li>
+                </div>
+                <div class="link-footer">
+                  <div class="view-link-btn">Straw Page</div>
+                </div>
+              </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar"></div>
+    </div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div id="project-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-projects">
+        <div class="window-header handle">
+          <span class="window-title">Projects</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="profile-container">
+            <div class="profile-header">
+              <div class="profile-name">
+                <h1><span class="cad-name">Current Projects of mine</span></h1>
+                <!-- <p><span class="sub-name">located all on my GitHub repository</span></p> -->
+              </div>
+            </div>
+          </div>
+
+          <div class="about-tabs">
+            <button class="tab-btn active" data-target="codes-sec">Code Projects</button>
+            <button class="tab-btn" data-target="edits-sec">Video Edits</button>
+            <span class="tab-underline"></span>
+          </div>
+
+          <div id="tab-content-wrapper">
+            <div id="codes-sec" class="about-info-section tab-content active" data-loaded="false"></div>
+            <div id="edits-sec" class="about-info-section tab-content" data-loaded="false"></div>
+          </div>
+
+          <template id="codes-sec-template">
+            <div class="about-info-section">
+              <h1><span class="cad-name">Languages</span></h1>
+              <div class="project-skills-container">
+                <span class="skill-tag">C#</span>
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">HTML</span>
+                <span class="skill-tag">CSS</span>
+                <span class="skill-tag">JavaScript</span>
+                <span class="skill-tag">Java</span>
+                <span class="skill-tag">C++</span>
+                <span class="skill-tag">Markdown</span>
+                <span class="skill-tag">TCL</span>
+                <span class="skill-tag">YAML</span>
+                <span class="skill-tag">XML</span>
+                <span class="skill-tag">JSON</span>
+                <span class="skill-tag">TOML</span>
+                <span class="skill-tag">Rust (learning)</span>
+              </div>
+            </div>
+
+            <div class="about-info-section">
+              <h1><span class="cad-name">Projects</span></h1>
+                <div class="project-grid-container" id="project-container">
+
+                  <!-- Projects will be loaded here by projects.js -->
+                  
+                </div>
+            </div>
+          </template>
+          
+          <template id="edits-sec-template">
+            <div class="about-info-section">
+              <h1><span class="cad-name">Apps I use</span></h1>
+              <div class="project-skills-container">
+                <span class="skill-tag">After Effects</span>
+                <span class="skill-tag">Alight Motion</span>
+                <span class="skill-tag">Photoshop</span>
+                <span class="skill-tag">Illustrator</span>
+                <span class="skill-tag">Infinite Painter</span>
+              </div>
+            </div>
+
+            <div class="about-info-section">
+              <h1><span class="cad-name">Showcase</span></h1>
+                <div class="project-grid-container" id="edits-container">
+
+                  <!-- Projects will be loaded here by edits.js -->
+                  
+                </div>
+            </div>
+          </template>
+
+          <div class="nav-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project-banner card -->
+  <div id="image-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-image">
+        <div class="window-header handle">
+          <span class="window-title">Project Banner</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content">
+          <div class="profile-container">
+            <img id="modal-image-banner" alt="Enlarged Project Banner" style="max-width:100%; border-radius:8px;">
+          </div>
+        </div>
+        <div class="nav-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div id="faq-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-faq">
+        <div class="window-header handle">
+          <span class="window-title">Frequently Asked Questions</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>How do you pronounce "cadlaxa"?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>I pronounce it as [k ae d l ae k s ax] or [k a d l a k s a] in filipino lol.</p>
+              <p>Fun fact, "cadlaxa" came from my sirname + middle name combined together.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>Who is that character in the about section?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>Oh, that's Saito, he's my OC and he's an OpenUTAU Voicebank voiced by me.
+                He can sing in English, Filipino, and Japanese, but he can crosslang to
+                Korean, Chinese, Spanish, Cantonese, and French. <a href="https://cadlaxa.github.io/Shizuma-Saito-site/"
+                  target="_blank" rel="noopener noreferrer">see his website</a>.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>What Vocal Synth software do you use?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>I use a variety of software for my work, including: UTAU, Synthv, Vocaloid 4 to 6, and
+                mainly OpenUTAU.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>What Photo/Illustration Editing software do you use?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>For mobile, I use Alight Motion and Snapseed, for desktop, I use variety of softwares such as After
+                Effects,
+                Adobe Photoshop, and Illustrator.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>What Audio Editing software do you use?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>I use mainly Reaper and sometimes Audacity, I also use kirawavtar and Adobe Audition for some
+                specific editing stuffs.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>Why did you pick CS?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>I want to learn how to program cuz create stuffs is fun.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>Is coding/programming hard?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>At first yes, it is hard but once you learned the foundation of the programming
+                language, you'll get it easily. Also I despise web development a lot lol
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <span>Do you have commissions open?</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              <p>For commission work, I have currently open right now and it's a phonemizer commission
+                you can take a look here <a href="https://x.com/cadlaxa/status/1947240688053108861" target="_blank"
+                  rel="noopener noreferrer">twitter post</a>.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="nav-bar"></div>
+    </div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div id="contact-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-contacts">
+        <div class="window-header handle">
+          <span class="window-title">Contact</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="profile-container">
+            <div class="profile-header">
+              <div class="profile-name">
+                <h1><span class="cad-name">ring ring</span></h1>
+              </div>
+            </div>
+          </div>
+          <div class="about-section">
+              <p>work email: <a href="mailto:cactusmusic30@gmail.com" class="cad-name">cactusmusic30@gmail.com</a></p>
+              <form id="contact-form">
+              <div class="form-grid">
+                <input type="text" name="name" placeholder="Your name" required />
+                <input type="email" name="email" placeholder="Your email" required />
+                <input type="text" name="subject" placeholder="Subject" required />
+                <textarea name="message" placeholder="What's up?" required></textarea>
+              </div>
+              <button type="submit" class="submit-btn">Submit</button>
+              </form>
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar"></div>
+    </div>
+  </div>
+
+  <!-- Submitted card -->
+  <div id="submit-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-submit">
+        <div class="window-header handle">
+          <span class="window-title">Status</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="profile-container">
+            <div class="profile-header">
+              <div class="profile-name">
+                <h1><span class="cad-name">Sent!</span></h1>
+                <i class="fa-solid fa-heart fa-bounce"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error card -->
+  <div id="error-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-error">
+        <div class="window-header handle">
+          <span class="window-title">Status</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="profile-container">
+            <div class="profile-header">
+              <div class="profile-name">
+                <h1><span class="cad-name">Error!</span></h1>
+                <i class="fa-solid fa-heart-crack fa-shake"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-section">
+            <h3 class="error-message"></h3>
+          </div>
+
+        </div>
+        <div class="nav-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  </script>
+  <script src="Scripts/site/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script src="Resources/dark-mode-toggle.js"></script>
+  <script src="Resources/email-submit.js"></script>
+  <script src="Resources/clicks.js"></script>
+  <script src="Resources/projects.js"></script>
+  <script src="Resources/master-toggle.js"></script>a
+  <script src="Resources/color-palette-toggle.js"></script>
+  <script src="Resources/tabs.js"></script>
+  <script src="Resources/cursor.js"></script>
+  <script src="Scripts/site/auth.js"></script>
+  </script>
+
+  <script>
+    window.addEventListener('load', () => {
+      const loadingScreen = document.querySelector('.loading-screen');
+      setTimeout(() => {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 500);
+      }, 1500);
+    });
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.1
+    });
+
+    document.querySelectorAll('section').forEach(section => {
+      observer.observe(section);
+    });
+  </script>
+</body>
+
+</html>

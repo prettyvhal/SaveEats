@@ -1,14 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
+  const signUpForm = document.getElementById("SignUpForm");
+  const restoBtn = document.getElementById("restoAcc");
+
   const submitModal = document.getElementById("submit-modal");
   const errorModal = document.getElementById("error-modal");
   const errorMessageBox = errorModal.querySelector(".error-message");
   const closeButtons = document.querySelectorAll(".close-btn");
   const googleLoginBtn = document.getElementById("googleLoginBtn");
 
-  // ---------------------------
-  // Firebase Config
-  // ---------------------------
+  let accountType = "user";
+
   const firebaseConfig = {
     apiKey: "AIzaSyAZKYQvVJihtvRz7QHrXHNullNNadyQVMc",
     authDomain: "saveeats-395fd.firebaseapp.com",
@@ -22,55 +24,119 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize Firebase (compat)
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
+  const db = firebase.firestore();
 
   // ---------------------------
-  // Email/password login
+  // LOGIN
   // ---------------------------
-  loginForm.addEventListener("submit", (e) => {
+  loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
 
-    auth.signInWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        // Login successful → show submit modal
-        submitModal.classList.add("visible");
-        navigator.vibrate?.([50, 150, 50]);
-        loginForm.reset();
-      })
-      .catch((error) => {
-        // No match → show error modal
-        showError(error.message);
-      });
+    try {
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      const docSnap = await db.collection("users").doc(user.uid).get();
+      if (!docSnap.exists) throw new Error("User data not found.");
+
+      const userType = docSnap.data().type || "user";
+
+      submitModal?.classList.add("visible");
+      navigator.vibrate?.([50, 150, 50]);
+
+      setTimeout(() => {
+        if (userType === "restaurant") {
+          window.location.href = "restaurant_home.html";
+        } else {
+          window.location.href = "user_home.html";
+        }
+      }, 1000);
+
+      loginForm.reset();
+    } catch (error) {
+      showError(error.message);
+    }
   });
 
   // ---------------------------
-  // Google login
+  // GOOGLE LOGIN
   // ---------------------------
-  googleLoginBtn.addEventListener("click", () => {
+  googleLoginBtn?.addEventListener("click", async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-      .then((result) => {
-        submitModal.classList.add("visible");
-        navigator.vibrate?.([50, 150, 50]);
-      })
-      .catch((error) => {
-        showError(error.message);
-      });
+    try {
+      const result = await auth.signInWithPopup(provider);
+      const user = result.user;
+
+      // Check Firestore for account type
+      const docSnap = await db.collection("users").doc(user.uid).get();
+      const userType = docSnap.exists ? docSnap.data().type || "user" : "user";
+
+      submitModal?.classList.add("visible");
+      navigator.vibrate?.([50, 150, 50]);
+
+      setTimeout(() => {
+        if (userType === "restaurant") {
+          window.location.href = "restaurant_home.html";
+        } else {
+          window.location.href = "user_home.html";
+        }
+      }, 1000);
+    } catch (error) {
+      showError(error.message);
+    }
   });
 
   // ---------------------------
-  // Show error modal
+  // SIGN UP
+  // ---------------------------
+  restoBtn?.addEventListener("click", () => {
+    accountType = "restaurant";
+    signUpForm.requestSubmit();
+  });
+
+  signUpForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const passwordRep = document.getElementById("password_rep").value;
+
+    if (password !== passwordRep) {
+      showError("Passwords do not match!");
+      return;
+    }
+
+    try {
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      await db.collection("users").doc(user.uid).set({
+        username: username,
+        email: email,
+        type: accountType,
+        createdAt: new Date()
+      });
+
+      submitModal?.classList.add("visible");
+      signUpForm.reset();
+      accountType = "user";
+    } catch (error) {
+      showError(error.message);
+    }
+  });
+
+  // ---------------------------
+  // MODALS
   // ---------------------------
   function showError(message) {
     errorMessageBox.textContent = message;
-    errorModal.classList.add("visible");
+    errorModal?.classList.add("visible");
     navigator.vibrate?.([50, 150, 50]);
   }
 
-  // ---------------------------
-  // Close modals
-  // ---------------------------
   closeButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       btn.closest(".modal-container").classList.remove("visible");

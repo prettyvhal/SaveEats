@@ -1,5 +1,5 @@
-const darkModeSound = new Audio("resources/sfx/darkmode.mp3");
-const lightModeSound = new Audio("resources/sfx/lightmode.mp3");
+const darkModeSound = new Audio("Resources/sfx/darkmode.mp3");
+const lightModeSound = new Audio("Resources/sfx/lightmode.mp3");
 
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 const prefersLight = window.matchMedia('(prefers-color-scheme: light)'); 
