@@ -1,17 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
@@ -24,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeButtons = document.querySelectorAll(".close-btn");
   const googleLoginBtn = document.getElementById("googleLoginBtn");
 
-  let accountType = "user";
+  let accountType = "user"; // default type
 
   const firebaseConfig = {
     apiKey: "AIzaSyAZKYQvVJihtvRz7QHrXHNullNNadyQVMc",
@@ -36,10 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
     measurementId: "G-6QZMSPQEM9"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
 
   // ---------------------------
   // MODALS
@@ -66,14 +59,36 @@ document.addEventListener("DOMContentLoaded", () => {
     submitModal?.classList.add("visible");
     navigator.vibrate?.([50, 150, 50]);
 
+    // save userType in localStorage
+    localStorage.setItem("loggedInUserType", userType);
+
     setTimeout(() => {
       if (userType === "restaurant") {
         window.location.href = "restaurant_home.html";
       } else {
         window.location.href = "home-user.html";
       }
-    }, 1000);
+    }, 2000);
   }
+
+  // ---------------------------
+  // AUTO REDIRECT IF LOGGED IN
+  // ---------------------------
+  onAuthStateChanged(auth, (user) => {
+    const savedType = localStorage.getItem("loggedInUserType");
+    const currentPage = window.location.pathname.split("/").pop();
+
+    if (!user || !savedType) return; // no user, no redirect
+
+    if (currentPage === "index.html" || currentPage === "sign-up.html") {
+      // only redirect from login/signup pages
+      if (savedType === "restaurant") {
+        window.location.href = "restaurant_home.html";
+      } else {
+        window.location.href = "home-user.html";
+      }
+    }
+  });
 
   // ---------------------------
   // LOGIN
@@ -87,12 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const docSnap = await getDoc(doc(db, "users", user.uid));
-      if (!docSnap.exists()) throw new Error("User data not found.");
-
-      const userType = docSnap.data().type || "user";
-      showSubmitModalAndRedirect(userType);
-
+      showSubmitModalAndRedirect(accountType);
       loginForm.reset();
     } catch (error) {
       showError(error.message);
@@ -108,10 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const docSnap = await getDoc(doc(db, "users", user.uid));
-      const userType = docSnap.exists ? docSnap.data().type || "user" : "user";
-
-      showSubmitModalAndRedirect(userType);
+      showSubmitModalAndRedirect(accountType);
     } catch (error) {
       showError(error.message);
     }
@@ -141,13 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        username: username,
-        email: email,
-        type: accountType,
-        createdAt: new Date()
-      });
 
       const redirectType = accountType;
       accountType = "user";
