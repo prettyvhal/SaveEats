@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaveEats</title>
+  <title>SaveEats Restaurant Dashboard</title>
   <link rel="stylesheet" href="Scripts/site/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
 
@@ -161,10 +161,30 @@
   <div class="window-container main-window">
     <div class="window-frame-home">
       <div class="window-header">
-        <span class="window-title">home</span>
+        <span class="window-title">Restaurant Dashboard</span>
       </div>
-      <div class="window-content">
-        
+      <div class="home-window-content">
+
+        <div class="fb-header">
+        <div class="banner-container">
+          <img id="bannerImage" src="assets/default-banner.jpg" class="banner-img">
+          <input type="file" id="bannerInput" hidden>
+          <button class="edit-btn" id="editBannerBtn">Edit Banner</button>
+        </div>
+
+        <div class="profile-row">
+          <div class="profile-pic-wrapper">
+            <img id="profileImage" src="assets/default-profile.png" class="profile-img">
+            <input type="file" id="profileInput" hidden>
+            <button class="edit-btn small" id="editProfileBtn">Edit</button>
+          </div>
+
+          <div class="profile-info">
+            <h2 id="restoName">Restaurant Name</h2>
+            <p id="restoEmail">email@example.com</p>
+          </div>
+        </div>
+      </div>
         
         <div class="nav-icons">
           <div class="icon-item" data-target="about-modal">
@@ -684,6 +704,7 @@
   <script src="Resources/tabs.js"></script>
   <script src="Resources/cursor.js"></script>
   <script type="module" src="Scripts/site/auth.js"></script>
+   <script type="module" src="Scripts/site/resto.js"></script>
   </script>
 
   <script>
