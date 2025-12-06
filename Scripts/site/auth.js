@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { app, auth, db } from "/Scripts/site/firebase-init.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -24,34 +24,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const submitModal = document.getElementById("submit-modal");
   const errorModal = document.getElementById("error-modal");
+  const notifModal = document.getElementById("notif-modal");
   const errorMessageBox = errorModal?.querySelector(".error-message");
+  const notifMessageBox = notifModal?.querySelector(".notif-message");
   const closeButtons = document.querySelectorAll(".close-btn");
 
   const googleLoginBtn = document.getElementById("googleLoginBtn");
   const appleLoginBtn = document.getElementById("appleLoginBtn");
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAZKYQvVJihtvRz7QHrXHNullNNadyQVMc",
-    authDomain: "saveeats-395fd.firebaseapp.com",
-    projectId: "saveeats-395fd",
-    storageBucket: "saveeats-395fd.appspot.com",
-    messagingSenderId: "1070958395954",
-    appId: "1:1070958395954:web:41c17d243770545c58f22b",
-    measurementId: "G-6QZMSPQEM9"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app); // Firestore reference
-
   // ---------------------------
   // MODALS
   // ---------------------------
-  function showError(message) {
-    if (!errorMessageBox || !errorModal) return;
-    errorMessageBox.textContent = message;
-    errorModal.classList.add("visible");
-  }
+  window.showError = function(message) {
+      if (!errorMessageBox || !errorModal) return;
+      errorMessageBox.textContent = message;
+      errorModal.classList.add("visible");
+  };
+
+  window.showNotif = function(message) {
+      if (!notifMessageBox || !notifModal) return;
+      notifMessageBox.textContent = message;
+      notifModal.classList.add("visible");
+  };
 
   closeButtons.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -66,8 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   async function showSubmitModalAndRedirect(passedType) {
-    const submitModal = document.getElementById("submit-modal");
-    submitModal?.classList.add("visible");
+    submitModal.classList.add("visible");
+    await new Promise(requestAnimationFrame);
 
     let userType = passedType || "user";
     const user = auth.currentUser;
@@ -91,15 +85,13 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       localStorage.setItem("loggedInUserType", userType);
     }
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
     setTimeout(() => {
       if (userType === "restaurant") {
         window.location.href = "resto-dashboard.html";
       } else {
         window.location.href = "home-user.html";
       }
-    }, 1200);
+    }, 5000);
   }
 
   // ---------------------------

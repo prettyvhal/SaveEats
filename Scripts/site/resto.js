@@ -1,101 +1,151 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { app, auth, db } from "/Scripts/site/firebase-init.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const bannerImg = document.getElementById("bannerImage");
+  // -------------------------------
+  // ELEMENTS
+  // -------------------------------
   const profileImg = document.getElementById("profileImage");
+  const bannerImg = document.getElementById("bannerImage");
   const restoName = document.getElementById("restoName");
   const restoEmail = document.getElementById("restoEmail");
 
-  const bannerInput = document.getElementById("bannerInput");
-  const profileInput = document.getElementById("profileInput");
+  const profileFileInput = document.getElementById("profileSelectInput");
+  const profileCanvas = document.getElementById("cropCanvas");
+  const saveProfileBtn = document.getElementById("saveProfileImage");
 
-  const editBannerBtn = document.getElementById("editBannerBtn");
-  const editProfileBtn = document.getElementById("editProfileBtn");
+  const bannerFileInput = document.getElementById("bannerSelectInput");
+  const bannerCanvas = document.getElementById("cropBannerCanvas");
+  const saveBannerBtn = document.getElementById("saveBannerImage");
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAZKYQvVJihtvRz7QHrXHNullNNadyQVMc",
-    authDomain: "saveeats-395fd.firebaseapp.com",
-    projectId: "saveeats-395fd",
-    storageBucket: "saveeats-395fd.appspot.com",
-    messagingSenderId: "1070958395954",
-    appId: "1:1070958395954:web:41c17d243770545c58f22b"
-  };
+  const profileCtx = profileCanvas.getContext("2d");
+  const bannerCtx = bannerCanvas.getContext("2d");
+  const profileModal = document.getElementById("profile-img-modal");
+  const bannerModal = document.getElementById("banner-img-modal");
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const storage = getStorage(app);
+  let selectedProfileImage = new Image();
+  let selectedBannerImage = new Image();
 
-  // LOAD USER DATA
+  const profileCropSize = 200;
+  const bannerCropSize = { width: 400, height: 225 }; // 16:9 ratio
+  const resolution = 0.9; // Compression resolution
+
+  // -------------------------------
+  // LOAD RESTO DATA
+  // -------------------------------
   onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
+    if (!user) return window.location.href = "index.html";
+    if (localStorage.getItem("loggedInUserType") !== "restaurant") return window.location.href = "home-user.html";
 
-    const savedType = localStorage.getItem("loggedInUserType");
-    if (savedType !== "restaurant") {
-      window.location.href = "home-user.html";
-      return;
-    }
-
-    restoName.textContent = user.displayName || "My Restaurant";
-    restoEmail.textContent = user.email;
-
-    // Load profile + banner if exists
-    loadImage(user.uid, "profile", profileImg, "assets/default-profile.png");
-    loadImage(user.uid, "banner", bannerImg, "assets/default-banner.jpg");
-  });
-
-  // LOAD IMAGE FROM STORAGE OR DEFAULT
-  async function loadImage(uid, type, imgElement, fallback) {
     try {
-      const fileRef = ref(storage, `restaurants/${uid}/${type}.jpg`);
-      const url = await getDownloadURL(fileRef);
-      imgElement.src = url;
-    } catch {
-      imgElement.src = fallback;
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return window.location.href = "index.html";
+
+      const data = docSnap.data();
+      restoName.textContent = data.restaurantName || data.username || "My Restaurant";
+      restoEmail.textContent = user.email;
+
+      // Load images from Firestore Base64 or defaults
+      profileImg.src = data.profileBase64 || "assets/default-profile.png";
+      bannerImg.src = data.bannerBase64 || "assets/default-banner.jpg";
+
+    } catch (err) {
+      console.error("Failed loading resto data:", err);
+      window.location.href = "index.html";
     }
-  }
-
-  // CLICK TO EDIT
-  editBannerBtn?.addEventListener("click", () => bannerInput.click());
-  editProfileBtn?.addEventListener("click", () => profileInput.click());
-
-  // UPLOAD HANDLERS
-  bannerInput?.addEventListener("change", (e) => {
-    uploadImage(e.target.files[0], "banner", bannerImg);
   });
 
-  profileInput?.addEventListener("change", (e) => {
-    uploadImage(e.target.files[0], "profile", profileImg);
-  });
-
-  // UPLOAD TO STORAGE + AUTO UPDATE UI
-  async function uploadImage(file, type, imgElement) {
+  // -------------------------------
+  // PROFILE IMAGE SELECT & CROP
+  // -------------------------------
+  profileFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
     if (!file) return;
 
-    const user = auth.currentUser;
-    if (!user) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      selectedProfileImage.onload = drawProfilePreview;
+      selectedProfileImage.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 
-    const fileRef = ref(storage, `restaurants/${user.uid}/${type}.jpg`);
-
-    try {
-      await uploadBytes(fileRef, file);
-      const url = await getDownloadURL(fileRef);
-      imgElement.src = url;
-      alert(`${type.toUpperCase()} updated successfully!`);
-    } catch (err) {
-      alert("Upload failed: " + err.message);
-    }
+  function drawProfilePreview() {
+    profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
+    const size = Math.min(selectedProfileImage.width, selectedProfileImage.height);
+    const startX = (selectedProfileImage.width - size) / 2;
+    const startY = (selectedProfileImage.height - size) / 2;
+    profileCtx.drawImage(selectedProfileImage, startX, startY, size, size, 0, 0, profileCropSize, profileCropSize);
   }
+
+  saveProfileBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return alert("Not logged in");
+    if (!selectedProfileImage.src) return alert("No image selected");
+
+    const base64 = profileCanvas.toDataURL("image/jpeg", resolution);
+    try {
+      await updateDoc(doc(db, "users", user.uid), { profileBase64: base64 });
+      profileImg.src = base64;
+      bannerModal.classList.remove("visible");
+      showNotif("Profile image updated!");
+    } catch (err) {
+      showError("Update failed: " + err.message);
+    }
+  });
+
+  // -------------------------------
+  // BANNER IMAGE SELECT & CROP
+  // -------------------------------
+  bannerFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      selectedBannerImage.onload = drawBannerPreview;
+      selectedBannerImage.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function drawBannerPreview() {
+    bannerCtx.clearRect(0, 0, bannerCanvas.width, bannerCanvas.height);
+    const srcWidth = selectedBannerImage.width;
+    const srcHeight = selectedBannerImage.height;
+
+    // Simple center crop for 16:9
+    const targetRatio = bannerCropSize.width / bannerCropSize.height;
+    let cropWidth = srcWidth;
+    let cropHeight = srcWidth / targetRatio;
+
+    if (cropHeight > srcHeight) {
+      cropHeight = srcHeight;
+      cropWidth = srcHeight * targetRatio;
+    }
+
+    const startX = (srcWidth - cropWidth) / 2;
+    const startY = (srcHeight - cropHeight) / 2;
+
+    bannerCtx.drawImage(selectedBannerImage, startX, startY, cropWidth, cropHeight, 0, 0, bannerCropSize.width, bannerCropSize.height);
+  }
+
+  saveBannerBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return alert("Not logged in");
+    if (!selectedBannerImage.src) return alert("No image selected");
+
+    const base64 = bannerCanvas.toDataURL("image/jpeg", resolution);
+    try {
+      await updateDoc(doc(db, "users", user.uid), { bannerBase64: base64 });
+      bannerImg.src = base64;
+      bannerModal.classList.remove("visible");
+      showNotif("Banner image updated!");
+    } catch (err) {
+      showError("Update failed: " + err.message);
+    }
+  });
+
 });

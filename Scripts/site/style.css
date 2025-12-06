@@ -741,6 +741,15 @@ body {
 }
 
 /* About */
+.bg-container {
+  border-radius: var(--radius);
+  background-color: var(--orangeHL);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .profile-container {
   border-radius: var(--radius);
   background-color: var(--orangeHL);
@@ -1651,6 +1660,7 @@ html {
 }
 
 .profile-info h2 {
+  text-align: left;
   margin: 0;
   color: var(--ptext);
 }

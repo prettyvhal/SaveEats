@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const MobileCloseButtons = document.querySelectorAll('.nav-bar');
     const modalContainers = document.querySelectorAll('.modal-container');
     const toggleModalBtn = document.querySelector('.toggle-modal-btn');
+    const editProfileBtn = document.getElementById("editProfileBtn");
+    const editBannerBtn = document.getElementById("editBannerBtn");
+
+    const profileModal = document.getElementById("profile-img-modal");
+    const bannerModal = document.getElementById("banner-img-modal");
     let highestZIndex = 1000;
     let activeModal = null;
 
@@ -83,6 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
         highestZIndex++;
         modalWindow.style.zIndex = highestZIndex;
     }
+
+    // OPEN PROFILE MODAL
+    editProfileBtn?.addEventListener("click", () => {
+        navigator.vibrate([50, 150, 50])
+        profileModal.classList.add("visible");
+    });
+
+    // OPEN BANNER MODAL
+    editBannerBtn?.addEventListener("click", () => {
+        navigator.vibrate([50, 150, 50])
+        bannerModal.classList.add("visible");
+    });
 
     // --- Modal Opening ---
     navIcons.forEach(icon => {
