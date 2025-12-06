@@ -1,4 +1,4 @@
-import { app, auth, db } from "https://cadlaxa.github.io/SaveEats/Scripts/site/firebase-init.js";
+import { app, auth, db } from "/Scripts/site/firebase-init.js";
 import {
   getAuth,
   onAuthStateChanged,
