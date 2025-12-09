@@ -1852,20 +1852,29 @@ html {
 
 .item-details {
   padding: 12px;
-  color: var(--ptext)
+  color: var(--ptext);
+  line-height: 25px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+}
+.item-details p {
+  margin-top: 10px;
+  font-size: 15px;
+  margin-bottom: 10px;
+  line-height: 20px;
 }
 
 .price-row {
   display: flex;
   justify-content: space-between;
-  margin: 6px 0;
-  font-size: 20px;
-
+  font-size: 22px;
 }
 
 .original-price {
   text-decoration: line-through;
-  opacity: 0.6;
+  opacity: 0.4;
   color: var(--ptext);
   font-weight: bold;
 }
@@ -1882,6 +1891,19 @@ html {
   padding: 10px;
   margin-top: auto;
 }
+
+.bottom-row {
+  background: var(--orangeL1);
+  border-radius: 15px;
+  padding: 5px;
+  color: var(--ptext);
+  margin-top: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
 
 .item-actions button {
   flex: 1;

@@ -76,7 +76,11 @@ document.addEventListener("mouseover", (e) => {
     "icon-item",
     "link-item",
     "resize-handle",
-    "faq-item"
+    "faq-item",
+    "item-card",
+    "profileImage",
+    "restoName",
+    "restaurant-card"
   ];
 
   for (let element = e.target; element; element = element.parentElement) {

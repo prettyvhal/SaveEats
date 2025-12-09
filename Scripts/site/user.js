@@ -30,8 +30,8 @@ function loadRestaurants() {
 
       const restoId = docSnap.id;
       const name = resto.username || "Unnamed Restaurant";
-      const logo = resto.profileBase64 || "assets/default-food.png";
-      const banner = resto.bannerBase64 || "assets/default-banner.jpg";
+      const logo = resto.profileBase64 || "Resources/assets/profile.jpg";
+      const banner = resto.bannerBase64 || "Resources/assets/banner.webp";
 
       const div = document.createElement("div");
       div.className = "restaurant-card";
@@ -136,22 +136,36 @@ function renderItems() {
   });
 
   sortedItems.forEach(item => {
-    const expireStr = item.expiryTime ? new Date(item.expiryTime).toLocaleDateString() : "N/A";
+    let expireStr = "N/A";
+    if (item.expiryTime) {
+      const date = item.expiryTime.toDate ? item.expiryTime.toDate() : new Date(item.expiryTime);
+      expireStr = date.toLocaleString();
+    }
 
     const card = document.createElement("div");
     card.className = "item-card";
+
+    const desc = item.description
+      ? (item.description.length > 30 
+          ? item.description.substring(0, 30) + "..." 
+          : item.description)
+      : "No item description";
 
     card.innerHTML = `
       <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
       <div class="item-details">
         <h3>${item.name}</h3>
-        <p>${item.description || ""}</p>
-        <div class="price-row">
-          <span class="original-price">₱${item.originalPrice}</span>
-          <span class="discounted-price">₱${item.discountedPrice}</span>
+        <p>${desc}</p>
+
+        <div class="bottom-row">
+          <div class="price-row">
+            <span class="original-price">₱${item.originalPrice}</span>
+            <span class="discounted-price">₱${item.discountedPrice}</span>
+          </div>
+          <p>Stock: ${item.quantity}</p>
+          <b>Expires: ${expireStr}</b>
         </div>
-        <p>Stock: ${item.quantity}</p>
-        <p>Expires: ${expireStr}</p>
+
       </div>
     `;
 

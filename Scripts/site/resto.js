@@ -178,8 +178,8 @@ document.addEventListener("DOMContentLoaded", () => {
       restoEmail.textContent = user.email;
 
       // Load images from Firestore Base64 or defaults
-      profileImg.src = data.profileBase64 || "assets/default-profile.png";
-      bannerImg.src = data.bannerBase64 || "assets/default-banner.jpg";
+      profileImg.src = data.profileBase64 || "Resources/assets/profile.jpg";
+      bannerImg.src = data.bannerBase64 || "Resources/assets/banner.webp";
 
     } catch (err) {
       console.error("Failed loading resto data:", err);

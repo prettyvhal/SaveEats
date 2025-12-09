@@ -144,19 +144,30 @@ function createItemElement(id, item) {
     const date = item.expiryTime.toDate ? item.expiryTime.toDate() : new Date(item.expiryTime);
     expireStr = date.toLocaleString();
   }
+  const desc = item.description
+    ? (item.description.length > 30 
+        ? item.description.substring(0, 30) + "..." 
+        : item.description)
+    : "No item description";
 
   div.innerHTML = `
     <img src="${item.imageBase64}" class="item-image">
     <div class="item-details">
       <h3>${item.name}</h3>
-      <p>${item.description || ""}</p>
-      <div class="price-row">
-        <span class="original-price">₱${item.originalPrice}</span>
-        <span class="discounted-price">₱${item.discountedPrice}</span>
+      <p>${desc}</p>
+
+      <div class="bottom-row">
+        <div class="price-row">
+          <span class="original-price">₱${item.originalPrice}</span>
+          <span class="discounted-price">₱${item.discountedPrice}</span>
+        </div>
+        
+        <p>Stock: ${item.quantity}</p>
+        <b>Expires: ${expireStr}</b>
       </div>
-      <p>Stock: ${item.quantity}</p>
-      <p>Expires: ${expireStr}</p>
+
     </div>
+
     <div class="item-actions">
       <button onclick="editItem('${id}')">Edit</button>
       <button onclick="deleteItem('${id}')">Delete</button>
@@ -198,7 +209,7 @@ window.editItem = async function(id) {
     itemQuantity.value = item.quantity;
     itemExpiry.value = item.expiryTime ? new Date(item.expiryTime.toDate ? item.expiryTime.toDate() : item.expiryTime).toISOString().slice(0,16) : "";
 
-    itemPreviewImage.src = item.imageBase64 || "assets/default-food.png";
+    itemPreviewImage.src = item.imageBase64 || "Resources/assets/food.png";
     selectedItemImage.src = item.imageBase64 || "";
   } catch (err) {
     showError("Failed to load item for editing: " + err.message);
@@ -294,7 +305,7 @@ async function saveItem(e) {
 // -------------------------------
 function clearItemForm() {
   itemImageInput.value = "";
-  itemPreviewImage.src = "assets/default-food.png";
+  itemPreviewImage.src = "Resources/assets/food.png";
   itemName.value = "";
   itemDescription.value = "";
   itemOriginalPrice.value = "";

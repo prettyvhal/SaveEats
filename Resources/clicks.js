@@ -219,7 +219,7 @@ function playPitchedHoverSound() {
 
 window.attachHoverListeners = function () {
     document.querySelectorAll
-        ('.project-item, .link-item, .icon-item, .faq-question, .skill-tag').forEach(item => {
+        ('.item-card').forEach(item => {
         let isHovered = false;
         item.addEventListener('mouseenter', () => {
             if (!isHovered) {
@@ -233,7 +233,7 @@ window.attachHoverListeners = function () {
     });
 };
 
-document.querySelectorAll('.icon-item, .faq-question, .faq-modal').forEach(item => {
+document.querySelectorAll('.item-card').forEach(item => {
     let isHovered = false;
     item.addEventListener('click', () => {
         if (!isHovered) {
