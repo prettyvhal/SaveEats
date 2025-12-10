@@ -6,7 +6,7 @@ import {
   where,
   getDocs,
   getDoc,
-  doc
+  doc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 window.addEventListener("load", loadRestaurants);
@@ -259,17 +259,74 @@ document.getElementById("redeemItemBtn").addEventListener("click", () => {
   });
 
   // Show modal
-  openReserveModal();
+  openRedeemModal(window.currentItem.id);
 });
 
-function openReserveModal() {
+function openRedeemModal(itemId) {
   qrModal.classList.add("visible");
   qrBackdrop.classList.add("visible");
+  listenRedeemedItems(itemId);
   modalManager.open([qrModal, qrBackdrop]);
   navigator.vibrate([40])
 }
 
-function closeReserveModal() {
+function listenRedeemedItems(itemId) {
+  if (!auth.currentUser) return;
+
+  const redeemedCol = collection(db, "users", auth.currentUser.uid, "redeemedItems");
+  const q = query(redeemedCol, where("itemId", "==", itemId));
+
+  // Listen for changes in real-time
+  const unsubscribe = onSnapshot(q, (snap) => {
+      if (!qrModal.classList.contains("visible")) return;
+
+      if (!snap.empty) {
+          // At least 1 redeemed entry exists
+          closeRedeemModalWithFX();
+          unsubscribe();
+      }
+  });
+}
+
+function closeRedeemModal() {
+  qrModal.classList.remove("visible");
+  setTimeout(() => {
+      qrBackdrop.classList.remove("visible");
+  }, 300);
+  modalManager.close([qrModal, qrBackdrop]);
+}
+
+function closeRedeemModalWithFX() {
+    confetti({
+        particleCount: 180,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.8 },
+        colors: ['#ffbe0b', '#fb5607', '#ff006e', '#8338ec', '#3a86ff'],
+        zIndex: 99999
+    });
+    setTimeout(() => {
+      confetti({
+        particleCount: 80,
+        angle: 100,
+        spread: 100,
+        origin: { x: 0.5, y: 0.8 },
+        colors: ['#ffbe0b', '#fb5607', '#ff006e', '#8338ec', '#3a86ff'],
+        zIndex: 99999
+      });
+    }, 300);
+    setTimeout(() => {
+      confetti({
+        particleCount: 180,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.8 },
+        colors: ['#ffbe0b', '#fb5607', '#ff006e', '#8338ec', '#3a86ff'],
+        zIndex: 99999
+      });
+    }, 300);
+    
+  navigator.vibrate([80, 50, 80]);
   qrModal.classList.remove("visible");
   setTimeout(() => {
       qrBackdrop.classList.remove("visible");
@@ -278,6 +335,6 @@ function closeReserveModal() {
 }
 
 // Clicking background closes
-qrCanvas.addEventListener("click", closeReserveModal);
-qrBackdrop.addEventListener("click", closeReserveModal);
+qrCanvas.addEventListener("click", closeRedeemModal);
+qrBackdrop.addEventListener("click", closeRedeemModal);
 

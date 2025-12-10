@@ -281,33 +281,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  async function handleQrScan(itemId) {
+  async function handleQrScan(itemId, userId) {
       try {
+          // 1. FETCH THE ITEM
           const itemRef = doc(db, "items", itemId);
           const itemSnap = await getDoc(itemRef);
-
           if (!itemSnap.exists()) {
-              showError("Item not found:", itemId);
+              showError("Item not found.");
               return;
           }
-
           const itemData = itemSnap.data();
           let newQuantity = (itemData.quantity || 0) - 1;
 
+          // 2. UPDATE OR DELETE ITEM
           if (newQuantity <= 0) {
-              // Stock depleted, delete the item
               await deleteDoc(itemRef);
-              showNotif(`Item "${itemData.name}" deleted, stock reached 0.`);
+              showNotif(`"${itemData.name}" deleted (0 stock).`);
               playSound(pay);
           } else {
-              // Update quantity
               await updateDoc(itemRef, { quantity: newQuantity });
-              showNotif(`Item "${itemData.name}" redeemed!`);
               playSound(pay);
-              console.log(`Item "${itemData.name}" stock reduced to ${newQuantity}.`);
+              showNotif(`Item "${itemData.name}" redeemed!`);
           }
+
+          // 3. UPDATE USER'S REDEEMED COUNT
+          const userRedeemRef = doc(db, "users", userId, "redeemedItems", itemId);
+          const userRedeemSnap = await getDoc(userRedeemRef);
+
+          if (userRedeemSnap.exists()) {
+              const oldCount = userRedeemSnap.data().count || 0;
+              await updateDoc(userRedeemRef, {
+                  count: oldCount + 1,
+                  lastRedeemed: Date.now(),
+              });
+          } else {
+              await setDoc(userRedeemRef, {
+                  count: 1,
+                  lastRedeemed: Date.now(),
+              });
+          }
+
+          // 4. SUCCESS → CLOSE MODAL
+          closeReserveModal();
+
       } catch (err) {
-          showNotif("Error updating item after QR scan:", err);
+          console.error(err);
+          showError("Error processing QR scan.");
       }
   }
 
@@ -336,15 +355,13 @@ document.addEventListener("DOMContentLoaded", () => {
                       fps: 30,
                       qrbox: 300
                   },
-                  (qrCodeMessage) => {
-                    try {
-                        const data = JSON.parse(qrCodeMessage);
-                        handleQrScan(data.itemId);
-                        closeQrScanner();
-                    } catch (e) {
-                        closeQrScanner();
-                        showError("Invalid QR code format.");
-                    }
+                  (qrMessage) => {
+                      try {
+                          const data = JSON.parse(qrMessage);
+                          handleQrScan(data.itemId, data.userId);
+                      } catch (e) {
+                          showError("Invalid QR code.");
+                      }
                   },
               ).catch(err => {
                   showError("QR Start Error:", err);
