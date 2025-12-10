@@ -281,19 +281,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  let scanningLock = false; // prevent double redemption
+
   async function handleQrScan(itemId, userId) {
+      if (scanningLock) return; // already processing
+      scanningLock = true;
+
       try {
-          // 1. FETCH THE ITEM
+          // 1. Fetch the item
           const itemRef = doc(db, "items", itemId);
           const itemSnap = await getDoc(itemRef);
           if (!itemSnap.exists()) {
               showError("Item not found.");
+              scanningLock = false;
               return;
           }
+
           const itemData = itemSnap.data();
           let newQuantity = (itemData.quantity || 0) - 1;
 
-          // 2. UPDATE OR DELETE ITEM
+          // 2. Update or delete item
           if (newQuantity <= 0) {
               await deleteDoc(itemRef);
               showNotif(`"${itemData.name}" deleted (0 stock).`);
@@ -304,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
               showNotif(`Item "${itemData.name}" redeemed!`);
           }
 
-          // 3. UPDATE USER'S REDEEMED COUNT
+          // 3. Update user's redeemed count
           const userRedeemRef = doc(db, "users", userId, "redeemedItems", itemId);
           const userRedeemSnap = await getDoc(userRedeemRef);
 
@@ -321,12 +328,13 @@ document.addEventListener("DOMContentLoaded", () => {
               });
           }
 
-          // 4. SUCCESS → CLOSE MODAL
-          closeReserveModal();
+          closeQrScanner();;
 
       } catch (err) {
           console.error(err);
           showError("Error processing QR scan.");
+      } finally {
+          scanningLock = false;
       }
   }
 
