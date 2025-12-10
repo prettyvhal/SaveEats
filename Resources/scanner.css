@@ -1,0 +1,43 @@
+/* scanner button */
+button.scanner-btn {
+    position: fixed;
+    bottom: 165px;
+    right: 10px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--orange); 
+    color: white;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2000;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease, display 0.3s ease-in-out opacity 0.3s ease;
+    display: inline-block;
+    border: solid 3px var(--orangeD);
+}
+
+button.scanner-btn:hover {
+    background-color: var(--orangeD, #fa8b4b);
+    transform: translateY(-5px);
+    border: solid 3px var(--dark-orange);
+}
+
+button.scanner-btn:active {
+    transform: var(--clicky);
+    border: solid 3px var(--dark-orange);
+}
+
+@keyframes shake {
+    0%   { transform: translateX(0px); }
+    20%  { transform: translateX(-6px); }
+    40%  { transform: translateX(6px); }
+    60%  { transform: translateX(-4px); }
+    80%  { transform: translateX(2px); }
+    100% { transform: translateX(0px); }
+}
+
+button.scanner-btn i.switching {
+    animation: shake 0.8s ease-in-out;
+}

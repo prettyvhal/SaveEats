@@ -1,6 +1,6 @@
 import { app, auth, db } from "https://cadlaxa.github.io/SaveEats/Scripts/site/firebase-init.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   addDoc,
   collection,
@@ -43,12 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
   editProfileBtn.addEventListener("click", () => {
       navigator.vibrate([50, 150, 50])
       profileModal.classList.add("visible");
+      modalManager.open([profileModal]);
   });
 
   // OPEN BANNER MODAL
   editBannerBtn.addEventListener("click", () => {
       navigator.vibrate([50, 150, 50])
       bannerModal.classList.add("visible");
+      modalManager.open([bannerModal]);
       
   });
 
@@ -277,5 +279,101 @@ document.addEventListener("DOMContentLoaded", () => {
       showError("Update failed: " + err.message);
     }
   });
+
+  async function handleQrScan(itemId) {
+      try {
+          const itemRef = doc(db, "items", itemId);
+          const itemSnap = await getDoc(itemRef);
+
+          if (!itemSnap.exists()) {
+              showError("Item not found:", itemId);
+              return;
+          }
+
+          const itemData = itemSnap.data();
+          let newQuantity = (itemData.quantity || 0) - 1;
+
+          if (newQuantity <= 0) {
+              // Stock depleted, delete the item
+              await deleteDoc(itemRef);
+              showNotif(`Item "${itemData.name}" deleted, stock reached 0.`);
+          } else {
+              // Update quantity
+              await updateDoc(itemRef, { quantity: newQuantity });
+              console.log(`Item "${itemData.name}" stock reduced to ${newQuantity}.`);
+          }
+      } catch (err) {
+          showNotif("Error updating item after QR scan:", err);
+      }
+  }
+
+  let qrScanner = null;
+  let scanningActive = false;
+  const qrModal = document.getElementById("qrSlideModal");
+  const qrBackdrop = document.getElementById("qrBackdrop");
+  const scannerBtn = document.getElementById("scannerBtn");
+
+  function startQrScan() {
+      if (scanningActive) return;
+
+      scanningActive = true;
+      const qrReaderElem = document.getElementById("qr-reader");
+      qrReaderElem.innerHTML = "";
+
+      qrScanner = new Html5Qrcode("qr-reader");
+
+      Html5Qrcode.getCameras().then(cameras => {
+          if (cameras && cameras.length) {
+              const camId = cameras[0].id; // back camera on mobile
+
+              qrScanner.start(
+                  camId,
+                  {
+                      fps: 30,
+                      qrbox: 250
+                  },
+                  (decodedText) => {
+                      handleQrScan(decodedText);
+                      closeQrScanner();
+                  }
+              ).catch(err => {
+                  showError("QR Start Error:", err);
+              });
+          }
+      }).catch(err => {
+          showError("Camera Error:", err);
+      });
+  }
+
+  function stopQrScan() {
+      if (!qrScanner) return;
+      qrScanner.stop()
+          .then(() => {
+              qrScanner.clear();
+              qrScanner = null;
+              scanningActive = false;
+          })
+          .catch(err => console.error("QR Stop Error:", err));
+  }
+
+  function openQrScanner() {
+      qrModal.classList.add("visible");
+      qrBackdrop.classList.add("visible");
+
+      modalManager.open([qrModal, qrBackdrop]);
+
+      setTimeout(startQrScan, 300);
+  }
+
+  function closeQrScanner() {
+      stopQrScan();
+      qrModal.classList.remove("visible");
+      qrBackdrop.classList.remove("visible");
+
+      modalManager.close([qrModal, qrBackdrop]);
+  }
+  // Buttons
+  scannerBtn.addEventListener("click", openQrScanner);
+  qrBackdrop.addEventListener("click", closeQrScanner);
 
 });

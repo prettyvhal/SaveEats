@@ -149,13 +149,13 @@
   <div class="window-container main-window">
     <div class="window-frame-home">
       <div class="window-header">
-        <span class="window-title">home</span>
+        <span class="window-title">home: SaveEats</span>
       </div>
-      <div class="window-content">
+      <div class="home-window-content">
 
         <!-- HERO / WELCOME -->
           <div class="home-hero">
-            <h2>Welcome to SaveEats 🍽️</h2>
+            <h2 >Welcome to SaveEats 🍽️</h2>
             <p>Find affordable meals before they expire and help reduce food waste.</p>
           </div>
           
@@ -168,9 +168,6 @@
             <p>No available restaurants right now.</p>
           </div>
         
-      </div>
-      <div class="social-links">
-        <p class="copyright">&copy; 2025 SaveEats</p>
       </div>
     </div>
 
@@ -239,37 +236,87 @@
     </div>
   </div>
 
-  <!-- CONTACTS -->
-  <div id="contact-modal" class="modal-container">
+  <!-- Items -->
+  <div id="Items-modal" class="modal-container">
     <div class="modal-window">
-      <div class="modal-window-base modal-contacts">
+      <div class="modal-window-base modal-medium">
         <div class="window-header handle">
-          <span class="window-title">Contact</span>
+          <span class="window-title" id="itemTitle">Item:</span>
           <button class="close-btn">&times;</button>
         </div>
         <div class="modal-content ">
-          <div class="profile-container">
-            <div class="profile-header">
-              <div class="profile-name">
-                <h1><span class="cad-name">ring ring</span></h1>
+
+          <form id="addItemForm">
+
+            <!-- IMAGE PREVIEW -->
+            <div class="form-grid3">
+              <img id="itemPreviewImage" src="Resources/assets/food.png" class="item-preview-img">
+            </div>
+
+            <!-- ITEM NAME -->
+            <div class="form-grid3">
+              <label>Item Name</label>
+              <input type="text" id="itemName" required>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="form-grid3">
+              <label>Description</label>
+              <textarea id="itemDescription" rows="3"></textarea>
+            </div>
+
+            <!-- ORIGINAL PRICE -->
+            <div class="form-grid3">
+              <label>Original Price (₱)</label>
+              <input type="number" id="itemOriginalPrice" required>
+            </div>
+
+            <!-- DISCOUNTED PRICE -->
+            <div class="form-grid3">
+              <label>Discounted Price (₱)</label>
+              <input type="number" id="itemDiscountedPrice" required>
+            </div>
+
+            <!-- ITEM QUANTITY -->
+            <div class="form-grid3">
+              <label>Item Quantity</label>
+              <input type="number" id="itemQuantity" required>
+            </div>
+
+            <!-- EXPIRATION TIME -->
+            <div class="form-grid3">
+              <label>Time to Expire</label>
+              <input type="text" id="itemExpiry" required>
+            </div>
+
+            <!-- BUTTON -->
+            <div class="bg-container">
+              <div class="form-grid1">
+                <button type="button" class="submit-btn" id="reserveItemBtn">Reserve Item</button>
+                <button type="button" class="submit-btn" id="redeemItemBtn">Redeem Item</button>
               </div>
             </div>
-          </div>
-          <div class="about-section">
-              <p>work email: <a href="mailto:cactusmusic30@gmail.com" class="cad-name">cactusmusic30@gmail.com</a></p>
-              <form id="contact-form">
-              <div class="form-grid">
-                <input type="text" name="name" placeholder="Your name" required />
-                <input type="email" name="email" placeholder="Your email" required />
-                <input type="text" name="subject" placeholder="Subject" required />
-                <textarea name="message" placeholder="What's up?" required></textarea>
-              </div>
-              <button type="submit" class="submit-btn">Submit</button>
-              </form>
-          </div>
+
+          </form>
+
         </div>
       </div>
       <div class="nav-bar"></div>
+    </div>
+  </div>
+
+  <!-- QR SLIDE-UP MODAL -->
+  <div class="qr-backdrop" id="qrBackdrop"></div>
+  <div id="qrSlideModal" class="qr-slide-modal">
+    <div class="qr-slide-content">
+      <div class="qr-slide-header">
+        <div class="drag-bar"></div>
+      </div>
+
+      <div class="qr-center">
+        <canvas id="qrCanvas"></canvas>
+        <p class="qr-note">Show this QR code at the restaurant to redeem your item</p>
+      </div>
     </div>
   </div>
 
@@ -354,6 +401,7 @@
   </script>
   <script src="Scripts/site/script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="Resources/dark-mode-toggle.js"></script>
   <script src="Resources/clicks.js"></script>
   <script src="Resources/master-toggle.js"></script>a

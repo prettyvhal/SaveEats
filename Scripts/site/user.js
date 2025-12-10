@@ -10,6 +10,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 window.addEventListener("load", loadRestaurants);
+const qrModal = document.getElementById("qrSlideModal");
+const qrBackdrop = document.getElementById("qrBackdrop");
 
 function loadRestaurants() {
   const grid = document.getElementById("restaurantGrid");
@@ -72,6 +74,7 @@ async function openRestaurant(name, restoId, logo, banner) {
 
   // Show modal
   modal.classList.add("visible");
+  modalManager.open([modal]);
 
   document.querySelector(".window-title1").textContent = name;
   document.getElementById("restoName").textContent = name;
@@ -110,6 +113,11 @@ async function loadRestaurantData(restoId) {
     }
 
     renderItems(); // render sorted/filtered items
+    const openedId = document.getElementById("Items-modal").dataset.itemId;
+    if (openedId) {
+      const updated = allItems.find(i => i.id === openedId);
+      if (updated) updateOpenItemModal(updated);
+    }
   });
 }
 
@@ -172,9 +180,104 @@ function renderItems() {
     `;
 
     itemsGrid.appendChild(card);
+    card.addEventListener("click", () => openUserItemModal(item));
   });
 }
 
 // Listen to sort changes
 document.getElementById("sortField").addEventListener("change", renderItems);
 document.getElementById("sortOrder").addEventListener("change", renderItems);
+
+function openUserItemModal(item) {
+    const modal = document.getElementById("Items-modal");
+    modal.dataset.itemId = item.id;
+    window.currentItem = item;
+    let expireStr = "N/A";
+    if (item.expiryTime) {
+      const date = item.expiryTime.toDate ? item.expiryTime.toDate() : new Date(item.expiryTime);
+      expireStr = date.toLocaleString();
+    }
+
+    // Fill inputs
+    document.getElementById("itemTitle").textContent = item.name || "Unamed Item";
+    document.getElementById("itemPreviewImage").src = item.imageBase64 || "Resources/assets/food.png";
+    document.getElementById("itemName").value = item.name || "";
+    document.getElementById("itemDescription").value = item.description || "";
+    document.getElementById("itemOriginalPrice").value = item.originalPrice || "";
+    document.getElementById("itemDiscountedPrice").value = item.discountedPrice || "";
+    document.getElementById("itemQuantity").value = item.quantity || "";
+    document.getElementById("itemExpiry").value = expireStr || "";
+
+    // Disable ALL fields
+    document.querySelectorAll("#Items-modal input, #Items-modal textarea")
+        .forEach(el => {
+            el.setAttribute("readonly", true);
+        });
+
+    // Show modal
+    modal.classList.add("visible");
+    modalManager.open([modal]);
+}
+function updateOpenItemModal(item) {
+    let expireISO = "";
+    if (item.expiryTime) {
+        const d = item.expiryTime.toDate ? item.expiryTime.toDate() : new Date(item.expiryTime);
+        expireISO = d.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+    }
+
+    document.getElementById("itemTitle").textContent = item.name || "Unnamed Item";
+    document.getElementById("itemPreviewImage").src = item.imageBase64 || "Resources/assets/food.png";
+    document.getElementById("itemName").value = item.name || "";
+    document.getElementById("itemDescription").value = item.description || "";
+    document.getElementById("itemOriginalPrice").value = item.originalPrice || "";
+    document.getElementById("itemDiscountedPrice").value = item.discountedPrice || "";
+    document.getElementById("itemQuantity").value = item.quantity || "";
+    document.getElementById("itemExpiry").value = expireISO || "";
+}
+
+document.getElementById("redeemItemBtn").addEventListener("click", () => {
+  if (!window.currentItem) return;
+
+  const canvas = document.getElementById("qrCanvas");
+
+  const user = auth.currentUser;
+
+  // QR content structure
+  const qrData = JSON.stringify({
+      itemId: window.currentItem.id,
+      userId: user ? user.uid : "guest",
+      time: Date.now()
+  });
+
+  // Clear previous QR
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Generate QR
+  QRCode.toCanvas(canvas, qrData, { width: 220 }, function (error) {
+      if (error) console.error(error);
+  });
+
+  // Show modal
+  openReserveModal();
+});
+
+function openReserveModal() {
+  qrModal.classList.add("visible");
+  qrBackdrop.classList.add("visible");
+  modalManager.open([qrModal, qrBackdrop]);
+  navigator.vibrate([40])
+}
+
+function closeReserveModal() {
+  qrModal.classList.remove("visible");
+  setTimeout(() => {
+      qrBackdrop.classList.remove("visible");
+  }, 300);
+  modalManager.close([qrModal, qrBackdrop]);
+}
+
+// Clicking background closes
+qrCanvas.addEventListener("click", closeReserveModal);
+qrBackdrop.addEventListener("click", closeReserveModal);
+

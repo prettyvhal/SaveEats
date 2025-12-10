@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.addEventListener('click', () => {
                     if (parentModalContainer) {
                         parentModalContainer.classList.remove('visible');
+                        modalManager.close([parentModalContainer]);
                     }
                     toggleModalBtn.style.display = 'none';
                     activeModal = null;
@@ -94,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parentModalContainer = button.closest('.modal-container');
                 if (parentModalContainer) {
                     parentModalContainer.classList.remove('visible');
+                    modalManager.close([parentModalContainer]);
                 }
                 navigator.vibrate([30])
                 toggleModalBtn.style.display = 'none';
@@ -413,4 +415,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(triggerBounce, 4000);
     });
+    
+    // GLOBAL MODAL BACK-BUTTON MANAGER
+    window.modalManager = {
+        stack: [],          // each entry is an array of elements
+        historyLocked: false, // true if we already pushed a history entry
+
+        open(elements) {
+            if (!Array.isArray(elements)) elements = [elements];
+            // Show elements
+            elements.forEach(el => el.classList.add("visible"));
+            // Add to stack
+            this.stack.push(elements);
+            // Lock history only if not locked yet
+            if (!this.historyLocked) {
+                history.pushState({ modalOpen: true }, "");
+                this.historyLocked = true;
+            }
+        },
+
+        close(elements) {
+            if (!Array.isArray(elements)) elements = [elements];
+            elements.forEach(el => el.classList.remove("visible"));
+            // Remove from stack
+            this.stack = this.stack.filter(group => group !== elements);
+            // If nothing left, unlock history
+            if (this.stack.length === 0) {
+                this.historyLocked = false;
+            }
+        },
+
+        closeTop() {
+            if (this.stack.length === 0) return;
+            const topGroup = this.stack.pop();
+            topGroup.forEach(el => el.classList.remove("visible"));
+            navigator.vibrate([40]);
+ 
+            // If nothing left, unlock history
+            if (this.stack.length === 0) {
+                this.historyLocked = false;
+            }
+        }
+    };
+
+    // Intercept back button
+    window.addEventListener("popstate", (e) => {
+        // Only handle if stack is not empty
+        if (window.modalManager.stack.length > 0) {
+            window.modalManager.closeTop();
+        }
+    });
+
 });
