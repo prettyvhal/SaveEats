@@ -68,7 +68,32 @@
 
   <div class="loading-screen">
     <div class="loading-animation"></div>
-      <div class="wave"></div>
+      <div class="waves back">
+        <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+          <defs>
+            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+          </defs>
+          <g class="wave-group">
+            <use xlink:href="#gentle-wave" x="48" y="5"></use>
+            <use xlink:href="#gentle-wave" x="20" y="7"></use>
+            <use xlink:href="#gentle-wave" x="80" y="17"></use>
+          </g>
+        </svg>
+      </div>
+      
+      <div class="waves front">
+        <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+          <defs>
+            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+          </defs>
+          <g class="wave-group">
+            <use xlink:href="#gentle-wave" x="60" y="10"></use>
+            <use xlink:href="#gentle-wave" x="30" y="23"></use>
+            <use xlink:href="#gentle-wave" x="48" y="5"></use>
+          </g>
+        </svg>
+      </div>
+      
   </div>
 
     <button id="scannerBtn" class="scanner-btn">
@@ -135,12 +160,6 @@
       </svg>
     </div>
     
-    <!-- <div class="boat">
-      <div class="sail1"></div>
-      <div class="sail2"></div>
-      <div class="hull"></div>
-    </div> -->
-    
     <div class="waves front">
       <svg viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs>
@@ -202,18 +221,19 @@
               
           </div>
         </div>
+        
+        <div class="about-section">
+          <div class="project-grid-container">
+            <div class="form-grid3">
 
-        <div class="project-grid-container">
-          <div class="form-grid3">
+            <div id="itemsGrid" class="items-grid">
+              <div class="item-card"></div>
+            </div>
+            
+            </div>
 
-          <div id="itemsGrid" class="items-grid">
-            <div class="item-card"></div>
           </div>
-          
-          </div>
-
         </div>
-
 
       </div>
     </div>
