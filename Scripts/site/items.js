@@ -191,6 +191,7 @@ window.deleteItem = async function(id) {
 // -------------------------------
 // EDIT ITEM
 // -------------------------------
+let originalExpiry = null;
 window.editItem = async function(id) {
   try {
     const docSnap = await getDoc(doc(db, "items", id));
@@ -207,7 +208,8 @@ window.editItem = async function(id) {
     itemOriginalPrice.value = item.originalPrice;
     itemDiscountedPrice.value = item.discountedPrice;
     itemQuantity.value = item.quantity;
-    itemExpiry.value = item.expiryTime ? new Date(item.expiryTime.toDate ? item.expiryTime.toDate() : item.expiryTime).toISOString().slice(0,16) : "";
+    //itemExpiry.value = item.expiryTime ? new Date(item.expiryTime.toDate ? item.expiryTime.toDate() : item.expiryTime).toISOString().slice(0,16) : "";
+    originalExpiry = item.expiryTime ?? null;
 
     itemPreviewImage.src = item.imageBase64 || "Resources/assets/food.png";
     selectedItemImage.src = item.imageBase64 || "";
@@ -219,6 +221,7 @@ window.editItem = async function(id) {
 // -------------------------------
 // SAVE ITEM
 // -------------------------------
+
 document.getElementById("addItemForm").addEventListener("submit", saveItem);
 let isSaving = false;
 async function saveItem(e) {

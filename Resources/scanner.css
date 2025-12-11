@@ -41,3 +41,37 @@ button.scanner-btn:active {
 button.scanner-btn i.switching {
     animation: shake 0.8s ease-in-out;
 }
+
+@media (max-width: 600px) {
+    button.scanner-btn {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 6px;
+        height: auto;
+        width: 120px;
+        border-radius: 50px;
+        background: var(--orange);
+        border: solid 3px var(--orangeD);
+    }
+
+    button.scanner-btn:hover {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        padding: 6px;
+        height: auto;
+        transform: translateX(-50%) scale(1.05);
+        width: 150px;
+    }
+    button.scanner-btn:active {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        padding: 6px;
+        height: auto;
+        transform: translateX(-50%) scale(1.05);
+        width: 150px;
+    }
+}

@@ -323,7 +323,7 @@ body {
 
 .window-frame-home {
   width: 90vw;
-  max-width: 950vw;
+  max-width: 95vw;
   background: var(--light-orange1);
   border-radius: var(--radius);
   overflow: hidden;
@@ -670,7 +670,7 @@ body {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.2);
-  /*backdrop-filter: blur(2px);*/
+  backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2060,7 +2060,7 @@ html {
   max-width: 100%;
   height: 400px;
   max-height: 80%;
-  transform: translate(-50%, 110%);
+  transform: translate(-50%, 300%);
   background: var(--orangeL1);
   border-radius: 20px;
   box-shadow: 0 5px 30px rgba(0, 0, 0, 0.521);
@@ -2145,12 +2145,36 @@ html {
 
 @media (max-width: 600px) {
 
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .fb-header {
+    position: relative;
+    width: 100%;
+  }
+  .banner-container .edit-btn {
+    position: absolute;
+    height: 30px;
+    top: 10px;
+    right: 10px;
+    background: var(--dark-orange);
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
   .qr-slide-modal {
     width: 100%;
   }
 
   .qr-slide-modal.visible {
-    transform: translate(-50%, 5%);
+    transform: translate(-50%, -5%);
   }
 
   .modal-small,
@@ -2214,7 +2238,6 @@ html {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 20%;
   }
 
   .social-links:hover {
@@ -2406,7 +2429,7 @@ html {
     margin-top: auto;
   }
   .profile-info h2 {
-    line-height: 22px;
+    line-height: 28px;
     text-align: center;
     font-size: 23px;
     margin: 0;
@@ -2427,6 +2450,12 @@ html {
     display: flex;
     justify-content: center;
     gap: 10px;
+    transform: scaleX(0.9);
+    margin-bottom: -30px;
+  }
+
+  .items-filter label {
+    display: none;
   }
 
   .items-filter label {
@@ -2471,14 +2500,12 @@ html {
   }
 
   .home-window-content {
-    max-height: 70vh;
-    padding: 50px 20px;
+    max-height: 80vh;
+    padding: 15px 15px;
     text-align: center;
     background-color: transparent;
     opacity: 1;
-    background-image:  radial-gradient(transparent 0.9px, transparent 0.9px), radial-gradient(transparent 0.9px, transparent 0.9px);
     background-size: 36px 36px;
-    background-position: 0 0,18px 18px;
   }
 
   .modal-window {
