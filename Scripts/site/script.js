@@ -87,20 +87,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         button.addEventListener('touchmove', e => {
             endY1 = e.touches[0].clientY;
-            moved = true; // mark that a move happened
+            moved = true;
         });
 
         button.addEventListener('touchend', () => {
-            if (moved && startY1 - endY1 > 50) {
+            const swipeDistance = startY1 - endY1;
+
+            // Much more sensitive: only 10px swipe needed
+            const isSwipeUp = moved && swipeDistance > 10;
+            const isTap = !moved || Math.abs(swipeDistance) < 5;
+
+            if (isSwipeUp || isTap) {
                 const parentModalContainer = button.closest('.modal-container');
                 if (parentModalContainer) {
                     parentModalContainer.classList.remove('visible');
                     modalManager.close([parentModalContainer]);
                 }
-                navigator.vibrate([30])
+                navigator.vibrate([30]);
                 toggleModalBtn.style.display = 'none';
                 activeModal = null;
             }
+
             startY1 = endY1 = 0;
             moved = false;
         });
