@@ -281,34 +281,91 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  async function handleQrScan(itemId) {
-      try {
-          const itemRef = doc(db, "items", itemId);
-          const itemSnap = await getDoc(itemRef);
+  async function handleQrScan(data) {
+    try {
+      const {
+        itemId,
+        reservationId
+      } = data;
 
-          if (!itemSnap.exists()) {
-              showError("Item not found:", itemId);
-              return;
-          }
-
-          const itemData = itemSnap.data();
-          let newQuantity = (itemData.quantity || 0) - 1;
-
-          if (newQuantity <= 0) {
-              // Stock depleted, delete the item
-              await deleteDoc(itemRef);
-              showNotif(`Item "${itemData.name}" deleted, stock reached 0.`);
-              playSound(pay);
-          } else {
-              // Update quantity
-              await updateDoc(itemRef, { quantity: newQuantity });
-              showNotif(`Item "${itemData.name}" redeemed!`);
-              playSound(pay);
-              console.log(`Item "${itemData.name}" stock reduced to ${newQuantity}.`);
-          }
-      } catch (err) {
-          showNotif("Error updating item after QR scan:", err);
+      if (!itemId) {
+        showError("Invalid QR: missing itemId.");
+        return;
       }
+
+      const itemRef = doc(db, "items", itemId);
+      const itemSnap = await getDoc(itemRef);
+
+      if (!itemSnap.exists()) {
+        showError("Item not found.");
+        return;
+      }
+
+      const itemData = itemSnap.data();
+      let newQuantity = (itemData.quantity || 0) - 1;
+
+      // ---------------------------------------
+      // CASE 1: QR HAS reservationId → use reservation logic
+      // ---------------------------------------
+      if (reservationId) {
+        const reservationRef = doc(db, "reservations", reservationId);
+        const resSnap = await getDoc(reservationRef);
+
+        if (!resSnap.exists()) {
+          showError("Reservation not found.");
+          return;
+        }
+
+        const resData = resSnap.data();
+
+        // Prevent double scanning
+        if (resData.redeemed) {
+          showError("Already redeemed.");
+          return;
+        }
+
+        // STEP 1 — mark as redeemed (user is allowed)
+        await updateDoc(reservationRef, {
+          redeemed: true
+        });
+
+        // STEP 2 — reduce stock (restaurant is allowed)
+        if (newQuantity <= 0) {
+          await deleteDoc(itemRef);
+          showNotif(`Item "${itemData.name}" deleted — stock is now 0.`);
+        } else {
+          await updateDoc(itemRef, {
+            quantity: newQuantity
+          });
+          showNotif(`Redeemed: "${itemData.name}"`);
+        }
+
+        // STEP 3 — delete reservation (restaurant allowed ONLY after redeemed)
+        await deleteDoc(reservationRef);
+
+        playSound(pay);
+        return;
+      }
+
+      // ---------------------------------------
+      // CASE 2: QR DOES NOT HAVE reservationId → reduces stock normally
+      // ---------------------------------------
+      if (newQuantity <= 0) {
+        await deleteDoc(itemRef);
+        showNotif(`Item "${itemData.name}" deleted — stock is now 0.`);
+      } else {
+        await updateDoc(itemRef, {
+          quantity: newQuantity
+        });
+        showNotif(`Redeemed: "${itemData.name}"`);
+      }
+
+      playSound(pay);
+
+    } catch (err) {
+      console.error(err);
+      showError("QR processing error: " + err.message);
+    }
   }
 
   let qrScanner = null;
@@ -339,7 +396,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   (qrCodeMessage) => {
                     try {
                         const data = JSON.parse(qrCodeMessage);
-                        handleQrScan(data.itemId);
+                        handleQrScan(data);
                         closeQrScanner();
                     } catch (e) {
                         closeQrScanner();

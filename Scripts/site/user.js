@@ -394,6 +394,7 @@ function listenReservedRedemptions(reservationId, itemId) {
 
   let previousQty = null;
 
+  // ITEM LISTENER (detect stock change)
   const unsubscribeItem = onSnapshot(itemRef, (itemSnap) => {
     if (!qrModal.classList.contains("visible")) {
       unsubscribeItem();
@@ -413,7 +414,7 @@ function listenReservedRedemptions(reservationId, itemId) {
       return;
     }
 
-    // Stock decreased → redeemed
+    // If stock decreased → redeemed
     if (currentQty < previousQty) {
       closeRedeemModalWithFX();
       unsubscribeItem();
@@ -422,19 +423,38 @@ function listenReservedRedemptions(reservationId, itemId) {
     previousQty = currentQty;
   });
 
+  // RESERVATION LISTENER (detect redeemed status)
   const unsubscribeReservation = onSnapshot(reservationRef, async (resSnap) => {
     if (!qrModal.classList.contains("visible")) {
       unsubscribeReservation();
       return;
     }
 
-    if (!resSnap.exists() || resSnap.data().redeemed) {
+    // If reservation deleted already → close
+    if (!resSnap.exists()) {
       closeRedeemModalWithFX();
+      unsubscribeReservation();
+      return;
+    }
 
-      if (resSnap.exists() && resSnap.data().redeemed) {
-        await updateDoc(itemRef, {
-          quantity: increment(-1)
+    const data = resSnap.data();
+
+    // If redeemed → delete reservation + decrease stock
+    if (data.redeemed === true) {
+      try {
+        await runTransaction(db, async (transaction) => {
+          // 1. Decrease item qty
+          transaction.update(itemRef, {
+            quantity: increment(-1)
+          });
+
+          // 2. Delete reservation doc
+          transaction.delete(reservationRef);
         });
+
+        closeRedeemModalWithFX();
+      } catch (err) {
+        console.error("Failed to process redemption:", err);
       }
 
       unsubscribeReservation();
