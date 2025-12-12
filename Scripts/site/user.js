@@ -7,6 +7,7 @@ import {
   getDocs,
   getDoc,
   doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 window.addEventListener("load", loadRestaurants);
@@ -363,3 +364,90 @@ function closeRedeemModalWithFX() {
 qrCanvas.addEventListener("click", closeRedeemModal);
 qrBackdrop.addEventListener("click", closeRedeemModal);
 
+function listenUserProfile() {
+  auth.onAuthStateChanged(async user => {
+    if (!user) return;
+
+    const profileImg = document.getElementById("profileImageHome");
+    const userRef = doc(db, "users", user.uid);
+
+    // Real-time listener
+    onSnapshot(userRef, snap => {
+      const data = snap.data() || {};
+
+      // Priority:
+      // 1. custom uploaded profile from Firestore
+      // 2. Google/Apple account photo
+      // 3. default avatar
+      const customPhoto = data.profileImage;
+      const providerPhoto = user.photoURL;
+
+      if (customPhoto) {
+        profileImg.src = customPhoto;
+      } else if (providerPhoto) {
+        profileImg.src = providerPhoto;
+      } else {
+        profileImg.src = "Resources/assets/profile.jpg";
+      }
+    });
+  });
+}
+listenUserProfile();
+document.getElementById("profileImageHome").addEventListener("click", () => {
+    openProfileEditModal();
+});
+const profileHomeImg = document.getElementById("profileImageHome");
+const profileImgModal = document.getElementById("profile-img-modal");
+const profileCloseBtn = profileImgModal.querySelector(".close-btn");
+
+profileHomeImg.addEventListener("click", () => {
+    profileImgModal.classList.add("visible");
+});
+
+profileCloseBtn.addEventListener("click", () => {
+    profileImgModal.classList.remove("visible");
+});
+
+const profileInput = document.getElementById("profileSelectInput");
+const cropCanvas = document.getElementById("cropCanvas");
+const ctxCrop = cropCanvas.getContext("2d");
+
+profileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+        const img = new Image();
+        img.onload = () => {
+            // Fit image to 200x200 canvas
+            const minSide = Math.min(img.width, img.height);
+            const sx = (img.width - minSide) / 2;
+            const sy = (img.height - minSide) / 2;
+
+            ctxCrop.clearRect(0, 0, 200, 200);
+            ctxCrop.drawImage(img, sx, sy, minSide, minSide, 0, 0, 200, 200);
+        };
+        img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById("saveProfileImage").addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return alert("Not logged in");
+
+    const croppedBase64 = cropCanvas.toDataURL("image/jpeg", 1);
+
+    try {
+        await updateDoc(doc(db, "users", user.uid), {
+            profileImage: croppedBase64
+        });
+
+        profileImgModal.classList.remove("visible");
+        showNotif("Profile updated");
+    } catch (err) {
+        console.error("Failed to save profile:", err);
+        showError("Failed to save profile: " + err.message);
+    }
+});

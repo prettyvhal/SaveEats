@@ -66,7 +66,31 @@
 
   <div class="loading-screen">
     <div class="loading-animation"></div>
-      <div class="wave"></div>
+      <div class="waves back">
+        <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+          <defs>
+            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+          </defs>
+          <g class="wave-group">
+            <use xlink:href="#gentle-wave" x="48" y="5"></use>
+            <use xlink:href="#gentle-wave" x="20" y="7"></use>
+            <use xlink:href="#gentle-wave" x="80" y="17"></use>
+          </g>
+        </svg>
+      </div>
+      
+      <div class="waves front">
+        <svg viewBox="0 24 150 28" preserveAspectRatio="none">
+          <defs>
+            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+          </defs>
+          <g class="wave-group">
+            <use xlink:href="#gentle-wave" x="60" y="10"></use>
+            <use xlink:href="#gentle-wave" x="30" y="23"></use>
+            <use xlink:href="#gentle-wave" x="48" y="5"></use>
+          </g>
+        </svg>
+      </div>
   </div>
 
     <button class="log-out-toggle">
@@ -125,12 +149,6 @@
       </svg>
     </div>
     
-    <!-- <div class="boat">
-      <div class="sail1"></div>
-      <div class="sail2"></div>
-      <div class="hull"></div>
-    </div> -->
-    
     <div class="waves front">
       <svg viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs>
@@ -148,19 +166,29 @@
 
   <div class="window-container main-window">
     <div class="window-frame-home">
-      <div class="window-header">
-        <span class="window-title">home: SaveEats</span>
+      <div class="window-header1">
+        <div class="profile-pic-wrapper1">
+          <img id="profileImageHome" src="Resources/assets/profile.jpg" class="profile-img1">
+        </div>
+        <span class="window-title2">home: SaveEats</span>
       </div>
       <div class="home-window-content">
 
         <!-- HERO / WELCOME -->
           <div class="home-hero">
-            <h2 >Welcome to SaveEats 🍽️</h2>
-            <p>Find affordable meals before they expire and help reduce food waste.</p>
+            <div class="hero-text">
+              <h2>Welcome to <span class="cad-name-special">SaveEats</span></h2>
+              <p>Find affordable meals before they expire and help reduce food waste.</p>
+            </div>
+            <div class="hero-image">
+              <img src="Resources/assets/salad.png" class="salad-img">
+            </div>
           </div>
-          
-          <div class="restaurant-grid" id="restaurantGrid">
-            <!-- Restaurants will be injected here -->
+
+          <div class="bg-container">
+            <div class="restaurant-grid" id="restaurantGrid">
+              <!-- Restaurants will be injected here -->
+            </div>
           </div>
 
           <div id="homeEmptyState" class="home-empty" style="display: none;">
@@ -185,13 +213,13 @@
 
           <div class="fb-header">
             <div class="banner-container">
-              <img id="bannerImage" src="assets/default-banner.jpg" class="banner-img">
+              <img id="bannerImage" src="Resources/assets/banner.webp" class="banner-img">
               <input type="file" id="bannerInput" hidden>
             </div>
 
             <div class="profile-row">
               <div class="profile-pic-wrapper">
-                <img id="profileImage" src="assets/default-profile.png" class="profile-img">
+                <img id="profileImage" src="Resources/assets/profile.jpg" class="profile-img">
                 <input type="file" id="profileInput" hidden>
               </div>
 
@@ -296,6 +324,35 @@
 
           </form>
 
+        </div>
+      </div>
+      <div class="nav-bar"></div>
+    </div>
+  </div>
+
+  <!-- profile img -->
+  <div id="profile-img-modal" class="modal-container">
+    <div class="modal-window">
+      <div class="modal-window-base modal-frame">
+        <div class="window-header handle">
+          <span class="window-title">Editing your profile photo</span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content ">
+          <div class="bg-container">
+
+              <div class="form-grid2">
+
+                <div class="crop-preview-container">
+                  <canvas id="cropCanvas" width="200" height="200"></canvas>
+                </div>
+                
+                <input type="file" id="profileSelectInput" accept="image/*">
+                <button class="submit-btn" id="saveProfileImage">Save</button>
+
+              </div>
+
+          </div>
         </div>
       </div>
       <div class="nav-bar"></div>

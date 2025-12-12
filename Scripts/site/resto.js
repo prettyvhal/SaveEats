@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
-    const size = 300;
+    const size = 500;
     canvas.width = size;
     canvas.height = size;
 

@@ -356,6 +356,29 @@ body {
   cursor: grab;
 }
 
+.window-header1 {
+  background-color: var(--orange);
+  padding: 8px 15px;
+  color: #fff;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  cursor: grab;
+}
+
+.window-header2 {
+  background-color: var(--orange);
+  padding: 8px 15px;
+  color: #fff;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  cursor: grab;
+
+  justify-content: center; /* centers the title */
+  position: relative;
+}
+
 .window-header:active ~ .modal-content,
 .window-header:active ~ .window-content {
   transform: var(--clicky);
@@ -916,7 +939,7 @@ body {
   font-size: 1.2em;
   font-weight: 500;
   color: var(--ptext);
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .about-section p,
@@ -1740,6 +1763,17 @@ html {
   position: relative;
 }
 
+.profile-pic-wrapper1 {
+  display: flex;
+}
+
+.window-title2 {
+  font-weight: 550;
+  font-size: large;
+  user-select: none;
+  margin-left: 10px;
+}
+
 .profile-img {
   width: 120px;
   height: 120px;
@@ -1759,8 +1793,29 @@ html {
   transform: scale(1);
 }
 
+.profile-img1 {
+  width: 50px;
+  height: 50px;
+  border-radius: 100%;
+  object-fit: cover;
+  border: 3px solid var(--orangeL);
+  background: var(--orangeHL);
+}
+
+.profile-img1:hover {
+  object-fit: cover;
+  border: 3px solid var(--orangeD);
+  background: var(--orangeL1);
+  transform: scale(0.93);
+}
+.profile-img1:active {
+  transform: scale(1);
+}
+
 .profile-info h2 {
+  line-height: 28px;
   text-align: left;
+  font-size: 2rem;
   margin: 0;
   color: var(--ptext);
 }
@@ -1983,7 +2038,7 @@ html {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 14px;
-  padding: 10px;
+  padding: 5px;
 }
 
 .restaurant-card {
@@ -2163,11 +2218,128 @@ html {
   border-radius: 15px;
 }
 
+.error-message {
+  padding-bottom: 30px;
+}
+
+.home-hero {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 20px 0px;
+  position: relative;
+  gap: 20px;
+  border-radius: 15px;
+  background: linear-gradient(90deg, var(--light-orange) 20%, var(--orangeL1), var(--orange));
+  margin-bottom: 10px;
+  transition: all 0.3s ease-in-out;
+}
+
+.hero-text {
+  flex: 1;
+  z-index: 3;
+  text-align: left;
+}
+
+.home-hero h2 {
+  font-family: Impact, Haettenschweiler, 'Arial Black', sans-serif;
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--ptext);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: -10px;
+}
+
+.home-hero p {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--ptext);
+  margin-bottom: 20px;
+}
+
+/* IMAGE section */
+.hero-image {
+  flex: 1;
+  position: relative;
+  width: 250px;
+  height: 250px;
+  overflow: hidden;
+}
+
+/* Rotating image */
+.salad-img {
+  width: 100%;
+  height: 200%;
+  object-fit: cover;
+}
+
+/* Rotation animation */
+@keyframes rotateImage {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 992px) {
 
   .project-grid-container {
     grid-template-columns: repeat(2, 1fr);
   }
+  
+  .home-hero {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0px 20px 0px;
+    position: relative;
+    gap: 20px;
+    border-radius: 15px;
+    background: linear-gradient(90deg, var(--light-orange) 20%, var(--orangeL1), var(--orange));
+    margin-bottom: 10px;
+  }
+
+  .hero-text {
+    flex: 1;
+    z-index: 3;
+    text-align: left;
+  }
+
+  .home-hero h2 {
+    font-family: Impact, Haettenschweiler, 'Arial Black', sans-serif;
+    font-size: 3.3rem;
+    font-weight: 900;
+    color: var(--ptext);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: -10px;
+  }
+
+  .home-hero p {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--ptext);
+    margin-bottom: 20px;
+  }
+
+  /* IMAGE section */
+  .hero-image {
+    flex: 1;
+    position: relative;
+    width: 270px;
+    height: 270px;
+    overflow: hidden;
+  }
+
+  /* Rotating image */
+  .salad-img {
+    margin-top: 15px;
+    width: 90%;
+    height: 90%;
+    object-fit: cover;
+  }
+  
 }
 
 @media (max-width: 600px) {
@@ -2572,6 +2744,63 @@ html {
 @media (max-width: 600px) {
   /* (Mobile CSS remains the same) */
 
+  .home-hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* text on top */
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+    border-radius: 15px;
+    background: linear-gradient(180deg, var(--light-orange) 40%, var(--orangeL1), var(--orange));
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    /* hide image overflow */
+  }
+
+  .hero-text {
+    z-index: 2;
+    text-align: center;
+  }
+
+  .home-hero h2 {
+    font-family: Impact, Haettenschweiler, 'Arial Black', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: var(--ptext);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .home-hero p {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ptext);
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+
+  /* IMAGE section */
+  .hero-image {
+    position: absolute;
+    bottom: -150px;
+    width: 300px;
+    height: 300px;
+    overflow: hidden;
+  }
+
+  /* Rotating image */
+  .salad-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: rotate(180deg);
+    opacity: 40%;
+  }
+
   .modal-container {
     position: fixed;
     top: 0;
@@ -2633,7 +2862,7 @@ html {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 14px;
-    padding: 10px;
+    padding: 0px;
   }
 
   .restaurant-name {
