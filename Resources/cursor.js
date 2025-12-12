@@ -80,7 +80,9 @@ document.addEventListener("mouseover", (e) => {
     "item-card",
     "profileImage",
     "restoName",
-    "restaurant-card"
+    "restaurant-card",
+    "reservation-preview",
+    "reservation-dot-more"
   ];
 
   for (let element = e.target; element; element = element.parentElement) {

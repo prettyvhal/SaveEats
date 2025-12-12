@@ -64,31 +64,36 @@ document.addEventListener("DOMContentLoaded", () => {
     let userType = passedType || "user";
     const user = auth.currentUser;
 
-    if (!passedType && user) {
-      try {
+    try {
+      // Only fetch from Firestore if passedType is NOT provided
+      if (!passedType && user) {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
           userType = docSnap.data().type || "user";
-          localStorage.setItem("loggedInUserType", userType);
         } else {
-          showError("User document not found, using default type.");
+          showError("User document not found. Using default type.");
         }
-      } catch (err) {
-        showError("Firestore fetch failed:", err);
-        const cachedType = localStorage.getItem("loggedInUserType");
-        if (cachedType) userType = cachedType;
       }
-    } else {
-      localStorage.setItem("loggedInUserType", userType);
+    } catch (err) {
+      // Format the error message properly
+      showError("Firestore fetch failed: " + err.message);
+
+      // Fallback to cached type if available
+      const cachedType = localStorage.getItem("loggedInUserType");
+      if (cachedType) userType = cachedType;
     }
+
+    // Save the final resolved type into cache
+    localStorage.setItem("loggedInUserType", userType);
+
+    // Redirect after 5 seconds
     setTimeout(() => {
-      if (userType === "restaurant") {
-        window.location.href = "resto-dashboard.html";
-      } else {
-        window.location.href = "home-user.html";
-      }
+      window.location.href =
+        userType === "restaurant" ?
+        "resto-dashboard.html" :
+        "home-user.html";
     }, 5000);
   }
 

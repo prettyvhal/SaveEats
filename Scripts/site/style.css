@@ -1600,10 +1600,17 @@ html {
   margin-top: 20px;
 }
 
+.tab-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px;
+}
+
 .tab-btn {
   background: var(--orangeD);
   border: none;
-  padding: 10px 16px;
+  padding: 10px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
@@ -1925,7 +1932,8 @@ html {
 
 .items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, auto));
+  justify-content: start;
   gap: 16px;
   margin-top: 20px;
   margin-bottom: 50px;
@@ -2061,6 +2069,99 @@ html {
 }
 .restaurant-card:hover .restaurant-logo {
   border: solid 3px var(--orange);
+}
+
+.restaurant-card:active {
+  transform: var(--clicky);
+}
+.restaurant-card:active .restaurant-logo {
+  transform: var(--clicky);
+}
+
+.item-image-wrapper {
+  position: relative;
+}
+
+.reservation-preview {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.reservation-dot {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: var(--orangeL1);
+  margin-right: 4px;
+  border: 2px solid var(--orange); /* makes it stand out on the image */
+}
+
+.reservation-dot-more {
+  background-color: var(--orangeL1);
+  border: 2px solid var(--orange);
+  font-size: 12px;
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 2px black;
+  border-radius: 15px;
+}
+
+/* Modal reservation user card */
+.reserved-user-card {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--dark-orange);
+  gap: 12px;
+}
+
+.reserved-user-card:last-child {
+  border-bottom: none;
+}
+
+.reserved-user-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: solid 2px var(--orange);
+}
+
+.reserved-user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.reserved-user-info span {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--orangeD);
+}
+
+.reserved-user-info small {
+  font-size: 14px;
+  color: var(--ptext);
+}
+
+.reserved-time {
+  font-size: 13px;
+  color: var(--ptext);
+  margin-top: 2px;
+}
+
+/* Scrollable modal content if too many */
+.reserved-modal {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 5px 10px;
 }
 
 /* Banner */
@@ -2243,13 +2344,14 @@ html {
 }
 
 .home-hero h2 {
-  font-family: Impact, Haettenschweiler, 'Arial Black', sans-serif;
+  font-family: 'Anton', Impact, Haettenschweiler, 'Arial Black', sans-serif;
   font-size: 4rem;
   font-weight: 900;
   color: var(--ptext);
   letter-spacing: 3px;
   text-transform: uppercase;
   margin-bottom: -10px;
+  line-height: 80px;
 }
 
 .home-hero p {
@@ -2314,6 +2416,7 @@ html {
     letter-spacing: 3px;
     text-transform: uppercase;
     margin-bottom: -10px;
+    line-height: 60px;
   }
 
   .home-hero p {
@@ -2344,6 +2447,45 @@ html {
 
 @media (max-width: 600px) {
 
+  .reserved-user-card {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--dark-orange);
+    gap: 12px;
+    flex-wrap: wrap;
+    overflow: hidden; 
+  }
+
+  .reserved-user-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .reserved-user-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  .reserved-user-info span {
+    font-weight: 600;
+    color: var(--orangeD);
+  }
+
+  .reserved-user-info small {
+    overflow-wrap: anywhere;
+  }
+
+  .reserved-time {
+    margin-top: 2px;
+  }
+
   .item-preview-img {
     width: 250px;
     height: 250px;
@@ -2351,7 +2493,8 @@ html {
 
   .items-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, auto));
+    justify-content: start;
     gap: 16px;
     margin-top: 20px;
   }
@@ -2773,6 +2916,7 @@ html {
     letter-spacing: 3px;
     text-transform: uppercase;
     margin-bottom: 10px;
+    line-height: 50px;
   }
 
   .home-hero p {
@@ -2787,8 +2931,8 @@ html {
   .hero-image {
     position: absolute;
     bottom: -150px;
-    width: 300px;
-    height: 300px;
+    width: 330px;
+    height: 330px;
     overflow: hidden;
   }
 

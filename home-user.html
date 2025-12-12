@@ -7,6 +7,8 @@
   <title>SaveEats</title>
   <link rel="stylesheet" href="Scripts/site/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+
 
   <link href="Resources/master-toggle.css" rel="stylesheet">
   <link href="Resources/clicks-toggle.css" rel="stylesheet">
@@ -186,9 +188,17 @@
           </div>
 
           <div class="bg-container">
-            <div class="restaurant-grid" id="restaurantGrid">
-              <!-- Restaurants will be injected here -->
+            <div class="tab-switcher">
+              <button class="tab-btn active" data-tab="restaurants">Restaurants</button>
+              <button class="tab-btn" data-tab="reserved">Reserved Items</button>
             </div>
+
+            <!-- RESTAURANT GRID -->
+            <div class="restaurant-grid" id="restaurantGrid" data-tab-content="restaurants"></div>
+
+            <!-- RESERVED ITEMS GRID -->
+            <div class="items-grid" id="reservedGrid" data-tab-content="reserved" style="display:none;"></div>
+
           </div>
 
           <div id="homeEmptyState" class="home-empty" style="display: none;">

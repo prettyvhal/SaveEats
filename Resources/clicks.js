@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (firstInteractionOccurred) return;
 
         if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContext = new(window.AudioContext || window.webkitAudioContext)();
         }
         if (audioContext.state === 'suspended') {
             try {
@@ -88,11 +88,16 @@ document.addEventListener('DOMContentLoaded', () => {
         [role="button"], [role="link"], [role="checkbox"],
         [role="radio"], [role="switch"], 
         [tabindex]:not([tabindex="-1"]),
-        [onclick], [contenteditable="true"]`;
+        [onclick], [contenteditable="true"],
+        .profile-img1, .profile-img`;
 
     // Unlock on first user input
-    document.body.addEventListener('click', initAudio, { once: true });
-    document.body.addEventListener('keydown', initAudio, { once: true });
+    document.body.addEventListener('click', initAudio, {
+        once: true
+    });
+    document.body.addEventListener('keydown', initAudio, {
+        once: true
+    });
 
     // Attach listeners
     document.body.addEventListener('click', (event) => {
@@ -131,7 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn("Saito unlock failed:", e);
             }
         }
-    }, { once: true });
+    }, {
+        once: true
+    });
 
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
@@ -142,7 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 observer.unobserve(entry.target);
             }
         });
-    }, { threshold: 0.5 });
+    }, {
+        threshold: 0.5
+    });
 
     observer.observe(saitoSection);
 });
@@ -166,7 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateIcon();
 
             if (!audioEnabled) {
-                try { saitoAudio?.pause(); } catch (e) {}
+                try {
+                    saitoAudio?.pause();
+                } catch (e) {}
                 tryShowModalMessage('mute');
             }
             playSound(new Audio(clickToggle));
@@ -178,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function updateIcon() {
-        clicksIcon.className = audioEnabled
-            ? "fa-solid fa-volume-high" 
-            : "fa-solid fa-volume-xmark";
+        clicksIcon.className = audioEnabled ?
+            "fa-solid fa-volume-high" :
+            "fa-solid fa-volume-xmark";
     }
 });
 
@@ -218,33 +229,34 @@ function playPitchedHoverSound() {
 }
 
 window.attachHoverListeners = function () {
-    document.querySelectorAll
-        ('.item-card').forEach(item => {
+    document.querySelectorAll('.item-card, .restaurant-card').forEach(item => {
+
+        // Prevent double attaching
+        if (item.dataset.sfxAttached === "yes") return;
+        item.dataset.sfxAttached = "yes";
+
         let isHovered = false;
-        item.addEventListener('mouseenter', () => {
+
+        // Hover sound
+        item.addEventListener("mouseenter", () => {
             if (!isHovered) {
                 playPitchedHoverSound();
                 isHovered = true;
             }
         });
-        item.addEventListener('mouseleave', () => {
+
+        // Reset hover
+        item.addEventListener("mouseleave", () => {
             isHovered = false;
+        });
+
+        // Click sound (always plays)
+        item.addEventListener("click", () => {
+            playRandomClickSound();
         });
     });
 };
 
-document.querySelectorAll('.item-card').forEach(item => {
-    let isHovered = false;
-    item.addEventListener('click', () => {
-        if (!isHovered) {
-            playRandomClickSound();
-            isHovered = true;
-        }
-    });
-    item.addEventListener('mouseleave', () => {
-        isHovered = false;
-    });
-});
 
 function playSound(audio = null) {
     if (!audioEnabled || !audio) return; // <-- checks global toggle

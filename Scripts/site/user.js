@@ -5,6 +5,7 @@ import {
   query,
   where,
   getDocs,
+  setDoc,
   getDoc,
   doc,
   updateDoc
@@ -56,6 +57,10 @@ function loadRestaurants() {
     });
 
     if (count === 0) emptyState.style.display = "flex";
+    // Re-attach hover/click sounds only once
+    if (window.attachHoverListeners) {
+      window.attachHoverListeners();
+    }
   });
 }
 
@@ -182,6 +187,10 @@ function renderItems() {
 
     itemsGrid.appendChild(card);
     card.addEventListener("click", () => openUserItemModal(item));
+    // Re-attach hover/click sounds only once
+    if (window.attachHoverListeners) {
+      window.attachHoverListeners();
+    }
   });
 }
 
@@ -271,6 +280,14 @@ function openRedeemModal(itemId) {
   navigator.vibrate([40])
 }
 
+function openReserveModal(itemId) {
+  qrModal.classList.add("visible");
+  qrBackdrop.classList.add("visible");
+  listenReservedRedemptions(itemId);
+  modalManager.open([qrModal, qrBackdrop]);
+  navigator.vibrate([40])
+}
+
 function listenRedeemedItems(itemId) {
   if (!itemId) return;
 
@@ -309,6 +326,70 @@ function listenRedeemedItems(itemId) {
   return unsubscribe;
 }
 
+function listenReservedRedemptions(reservationId, itemId) {
+  if (!reservationId || !itemId) return;
+
+  const itemRef = doc(db, "items", itemId);
+  const reservationRef = doc(db, "reservations", reservationId);
+
+  let previousQty = null;
+
+  const unsubscribeItem = onSnapshot(itemRef, (itemSnap) => {
+    if (!qrModal.classList.contains("visible")) {
+      unsubscribeItem();
+      return;
+    }
+
+    if (!itemSnap.exists()) {
+      // Item deleted → close modal
+      closeRedeemModalWithFX();
+      unsubscribeItem();
+      return;
+    }
+
+    const itemData = itemSnap.data();
+    const currentQty = itemData.quantity ?? 0;
+
+    // Set baseline on first snapshot
+    if (previousQty === null) {
+      previousQty = currentQty;
+      return;
+    }
+
+    // Detect stock decrease
+    if (currentQty < previousQty) {
+      closeRedeemModalWithFX();
+      unsubscribeItem();
+      return;
+    }
+
+    previousQty = currentQty;
+  });
+
+  const unsubscribeReservation = onSnapshot(reservationRef, (resSnap) => {
+    if (!qrModal.classList.contains("visible")) {
+      unsubscribeReservation();
+      return;
+    }
+
+    if (!resSnap.exists() || resSnap.data().redeemed) {
+      // Reservation was deleted or redeemed → close modal
+      closeRedeemModalWithFX();
+
+      // Optionally decrement the item quantity if redeemed
+      if (resSnap.exists() && resSnap.data().redeemed) {
+        update(itemRef, {
+          quantity: FieldValue.increment(-1)
+        }).catch(console.error);
+      }
+
+      unsubscribeReservation();
+      return;
+    }
+  });
+
+  return [unsubscribeItem, unsubscribeReservation];
+}
 
 function closeRedeemModal() {
   qrModal.classList.remove("visible");
@@ -450,4 +531,156 @@ document.getElementById("saveProfileImage").addEventListener("click", async () =
         console.error("Failed to save profile:", err);
         showError("Failed to save profile: " + err.message);
     }
+});
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const target = btn.dataset.tab;
+
+    document.querySelectorAll("[data-tab-content]").forEach(grid => {
+      grid.style.display = "none";
+    });
+
+    document.querySelector(`[data-tab-content='${target}']`).style.display = "grid";
+  });
+});
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Show reserved items for the logged-in user
+    listenReservedItems(user.uid);
+  } else {
+    // Optionally clear reserved grid if logged out
+    reservedGrid.innerHTML = "<p style='text-align:center; padding:20px;'>Please log in to see reserved items.</p>";
+  }
+});
+
+const reservedGrid = document.getElementById("reservedGrid");
+function listenReservedItems(userId) {
+  if (!userId) return;
+
+  const q = query(
+    collection(db, "reservations"),
+    where("userId", "==", userId),
+    where("redeemed", "==", false)
+  );
+
+  onSnapshot(q, async (snap) => {
+    reservedGrid.innerHTML = "";
+
+    if (snap.empty) {
+      reservedGrid.innerHTML = "<p style='text-align:center; padding:20px;'>No reserved items.</p>";
+      return;
+    }
+
+    for (const docSnap of snap.docs) {
+      const reservation = docSnap.data();
+
+      // Fetch the item data to show image/details
+      const itemRef = doc(db, "items", reservation.itemId);
+      const itemSnap = await getDoc(itemRef);
+      const item = itemSnap.exists() ? itemSnap.data() : {};
+
+      const div = document.createElement("div");
+      div.className = "item-card";
+
+      div.innerHTML = `
+        <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
+        <div class="item-details">
+          <h3>${reservation.name}</h3>
+
+          <div class="bottom-row">
+            <div class="price-row">
+              <span class="original-price">₱${item.originalPrice ?? 'N/A'}</span>
+              <span class="discounted-price">₱${item.discountedPrice ?? 'N/A'}</span>
+            </div>
+            <p>Reserved At: ${reservation.reservedAt?.toDate ? reservation.reservedAt.toDate().toLocaleString() : new Date(reservation.reservedAt).toLocaleString()}</p>
+            <div class="item-actions">
+              <button class="redeem-btn">Redeem</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const redeemBtn = div.querySelector(".redeem-btn");
+      redeemBtn.addEventListener("click", () => {
+        const canvas = document.getElementById("qrCanvas");
+        const user = auth.currentUser;
+
+        // QR content using this reservation/item
+        const qrData = JSON.stringify({
+          itemId: reservation.itemId,
+          userId: user ? user.uid : "guest",
+          time: Date.now()
+        });
+
+        // Clear previous QR
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Generate QR
+        QRCode.toCanvas(canvas, qrData, { width: 220 }, function (error) {
+          if (error) console.error(error);
+        });
+
+        // Show modal
+        openReserveModal(reservation.itemId);
+      });
+
+      reservedGrid.appendChild(div);
+    }
+
+    // Re-attach hover/click sounds only once
+    if (window.attachHoverListeners) window.attachHoverListeners();
+  });
+}
+
+document.getElementById("reserveItemBtn").addEventListener("click", async () => {
+  const item = window.currentItem;
+  const user = auth.currentUser;
+
+  if (!item) return showError("No item selected.");
+  if (!user) return showError("You must be logged in to reserve items.");
+
+  try {
+    const itemRef = doc(db, "items", item.id);
+    const itemSnap = await getDoc(itemRef);
+    if (!itemSnap.exists()) return showError("Item no longer exists.");
+
+    const itemData = itemSnap.data();
+
+    // Count active reservations
+    const reservationsSnap = await getDocs(query(
+      collection(db, "reservations"),
+      where("itemId", "==", item.id),
+      where("redeemed", "==", false)
+    ));
+    const reservedCount = reservationsSnap.size;
+    const availableStock = (itemData.quantity ?? 0) - reservedCount;
+
+    if (availableStock <= 0) {
+      return showError("Sorry, all remaining stock has already been reserved.");
+    }
+
+    // Prevent double reservation
+    const alreadyReserved = reservationsSnap.docs.some(doc => doc.data().userId === user.uid);
+    if (alreadyReserved) return showError("You have already reserved this item.");
+
+    // Make reservation
+    await setDoc(doc(collection(db, "reservations")), {
+      itemId: item.id,
+      userId: user.uid,
+      name: itemData.name,
+      reservedAt: new Date(),
+      redeemed: false
+    });
+
+    showNotif(`Item "${itemData.name}" reserved successfully!`);
+  } catch (err) {
+    console.error(err);
+    showError("Failed to reserve item: " + err.message);
+  }
 });

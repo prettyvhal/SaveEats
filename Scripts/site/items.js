@@ -9,7 +9,9 @@ import {
   doc,
   getDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  getDocs,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 let itemsGrid;
@@ -45,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   saveItemBtn = document.getElementById("saveItemBtn");
 
   addItemBtn?.addEventListener("click", () => {
+    clearItemForm();
     itemsModal.classList.add("visible");
   });
   closeModalBtn?.addEventListener("click", () => {
@@ -151,7 +154,10 @@ function createItemElement(id, item) {
     : "No item description";
 
   div.innerHTML = `
-    <img src="${item.imageBase64}" class="item-image">
+    <div class="item-image-wrapper">
+      <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
+      <div class="reservation-preview" id="reservationPreview-${id}"></div>
+    </div>
     <div class="item-details">
       <h3>${item.name}</h3>
       <p>${desc}</p>
@@ -173,7 +179,119 @@ function createItemElement(id, item) {
       <button onclick="deleteItem('${id}')">Delete</button>
     </div>
   `;
+    div.addEventListener("click", () => {
+      editItem(id);
+    });
+   
+  // Re-attach hover/click sounds only once
+  if (window.attachHoverListeners) {
+    window.attachHoverListeners();
+  }
+
+  // Reservation dots overlay
+  const previewContainer = div.querySelector(`#reservationPreview-${id}`);
+  const q = query(
+    collection(db, "reservations"),
+    where("itemId", "==", id),
+    where("redeemed", "==", false)
+  );
+
+  onSnapshot(q, async (snap) => {
+    previewContainer.innerHTML = "";
+    const docs = snap.docs.slice(0, 5);
+
+    for (const docSnap of docs) {
+      const reservation = docSnap.data();
+      const userRef = doc(db, "users", reservation.userId);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? userSnap.data() : {};
+
+      const dot = document.createElement("img");
+      dot.className = "reservation-dot";
+      dot.title = userData.username || "User";
+
+      // Priority: Firestore photo → current logged-in auth photo if same user → fallback
+      let profileSrc = "Resources/assets/profile.jpg"; // default fallback
+      if (userData.profileImage) {
+        profileSrc = userData.profileImage;
+      } else if (auth.currentUser && auth.currentUser.uid === reservation.userId && auth.currentUser.photoURL) {
+        profileSrc = auth.currentUser.photoURL;
+      }
+
+      dot.src = profileSrc;
+      previewContainer.appendChild(dot);
+    }
+
+    // More count if > 5
+    if (snap.docs.length > 5) {
+      const more = document.createElement("span");
+      more.className = "reservation-dot-more";
+      more.textContent = `+${snap.docs.length - 5}`;
+      previewContainer.appendChild(more);
+    }
+
+    previewContainer.onclick = (e) => {
+      e.stopPropagation();
+      openReservationModal(id);
+    };
+  });
+
   return div;
+}
+
+async function openReservationModal(itemId) {
+  const modal = document.getElementById("reserved-modal");
+  const modalContent = modal.querySelector(".reserved-card");
+  modalContent.innerHTML = ""; // clear previous content
+
+  const q = query(
+    collection(db, "reservations"),
+    where("itemId", "==", itemId),
+    where("redeemed", "==", false)
+  );
+
+  onSnapshot(q, async (snap) => {
+    modalContent.innerHTML = "";
+
+    if (snap.empty) {
+      modalContent.innerHTML = "<p style='text-align:center; padding:20px;'>No reservations yet.</p>";
+      return;
+    }
+
+    for (const docSnap of snap.docs) {
+      const reservation = docSnap.data();
+
+      // Fetch user data
+      const userRef = doc(db, "users", reservation.userId);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? userSnap.data() : {};
+
+      // Build reservation div
+      const div = document.createElement("div");
+      div.className = "reserved-user-card";
+
+      // Use profile image or fallback
+      let profileSrc = "Resources/assets/profile.jpg";
+      if (userData.profileImage) {
+        profileSrc = userData.profileImage;
+      } else if (auth.currentUser && auth.currentUser.uid === reservation.userId && auth.currentUser.photoURL) {
+        profileSrc = auth.currentUser.photoURL;
+      }
+
+      div.innerHTML = `
+        <img src="${profileSrc}" class="reserved-user-img">
+        <div class="reserved-user-info">
+          <span>${userData.username || "User"}</span>
+          <small>${userData.email || "No email"}</small>
+          <div class="reserved-time">Reserved At: ${reservation.reservedAt?.toDate ? reservation.reservedAt.toDate().toLocaleString() : new Date(reservation.reservedAt).toLocaleString()}</div>
+        </div>
+      `;
+
+      modalContent.appendChild(div);
+    }
+  });
+  // Show modal
+  modal.classList.add("visible");
 }
 
 // -------------------------------
@@ -181,9 +299,28 @@ function createItemElement(id, item) {
 // -------------------------------
 window.deleteItem = async function(id) {
   try {
+    // Delete the item
     await deleteDoc(doc(db, "items", id));
-    showNotif("Item deleted successfully!");
+
+    // Delete all active reservations for this item
+    const reservationsQuery = query(
+      collection(db, "reservations"),
+      where("itemId", "==", id),
+      where("redeemed", "==", false)
+    );
+
+    const reservationsSnap = await getDocs(reservationsQuery);
+    const batch = writeBatch(db);
+
+    reservationsSnap.forEach(docSnap => {
+      batch.delete(doc(db, "reservations", docSnap.id));
+    });
+
+    await batch.commit();
+
+    showNotif("Item and related reservations deleted successfully!");
   } catch (err) {
+    console.error(err);
     showError("Failed to delete item: " + err.message);
   }
 }
