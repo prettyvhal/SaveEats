@@ -285,7 +285,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const {
         itemId,
-        reservationId
+        reservationId,
+        userId
       } = data;
 
       if (!itemId) {
@@ -324,6 +325,15 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        let username = "User";
+        if (resData.userId) {
+            const userRef = doc(db, "users", resData.userId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                username = userSnap.data().username || "User";
+            }
+        }
+
         // STEP 1 — mark as redeemed (user is allowed)
         await updateDoc(reservationRef, {
           redeemed: true
@@ -333,11 +343,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (newQuantity <= 0) {
           await deleteDoc(itemRef);
           showNotif(`Item "${itemData.name}" deleted — stock is now 0.`);
+          playSound(pay);
         } else {
           await updateDoc(itemRef, {
             quantity: newQuantity
           });
-          showNotif(`Redeemed: "${itemData.name}"`);
+          showNotif(`Redeemed reserved item: "${itemData.name}" by "${username}"`);
         }
 
         // STEP 3 — delete reservation (restaurant allowed ONLY after redeemed)
@@ -353,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (newQuantity <= 0) {
         await deleteDoc(itemRef);
         showNotif(`Item "${itemData.name}" deleted — stock is now 0.`);
+        playSound(pay);
       } else {
         await updateDoc(itemRef, {
           quantity: newQuantity
