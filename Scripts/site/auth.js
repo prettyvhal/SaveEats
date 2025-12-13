@@ -163,81 +163,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const writeOrUpdateUserProfile = async (user) => {
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+
+    // Merge ensures first-time creation or update of missing fields
+    await setDoc(
+      userRef,
+      {
+        email: user.email || "",
+        username: user.displayName || "",
+        profileImage: user.photoURL || null,
+        type: "user"
+      },
+      { merge: true }
+    );
+  };
+
   // ---------------------------
-  // GOOGLE LOGIN (AUTO USER)
+  // GOOGLE LOGIN
   // ---------------------------
-  googleLoginBtn?.addEventListener("click", async () => {
+  googleLoginBtn?.addEventListener("click", async (e) => {
+    e.preventDefault(); // prevent page refresh
     const provider = new GoogleAuthProvider();
 
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      await writeOrUpdateUserProfile(result.user);
 
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
-
-      if (!snap.exists()) {
-        // First time login → create user document
-        await setDoc(userRef, {
-          email: user.email,
-          username: user.displayName || "",
-          profileImage: user.photoURL || null,
-          type: "user"
-        });
-      } else {
-        // Existing user → DO NOT overwrite saved data
-        await setDoc(
-          userRef, {
-            email: user.email, // update email
-            username: snap.data().username || user.displayName || "",
-            profileImage: snap.data().profileImage || user.photoURL || null
-          }, {
-            merge: true
-          } // keep existing fields
-        );
-      }
-
+      // redirect after Firestore write completes
       showSubmitModalAndRedirect("user");
     } catch (error) {
       showError(error.message);
     }
   });
 
-
   // ---------------------------
-  // APPLE LOGIN (AUTO USER)
+  // APPLE LOGIN
   // ---------------------------
-  appleLoginBtn?.addEventListener("click", async () => {
+  appleLoginBtn?.addEventListener("click", async (e) => {
+    e.preventDefault(); // prevent page refresh
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
 
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      await writeOrUpdateUserProfile(result.user);
 
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
-
-      if (!snap.exists()) {
-        await setDoc(userRef, {
-          email: user.email,
-          username: user.displayName || "",
-          profileImage: user.photoURL || null,
-          type: "user"
-        });
-      } else {
-        await setDoc(
-          userRef, {
-            email: user.email,
-            username: snap.data().username || user.displayName || "",
-            profileImage: snap.data().profileImage || user.photoURL || null
-          }, {
-            merge: true
-          }
-        );
-      }
-
+      // redirect after Firestore write completes
       showSubmitModalAndRedirect("user");
     } catch (error) {
       showError(error.message);
