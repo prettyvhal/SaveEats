@@ -356,8 +356,14 @@
                 <div class="crop-preview-container">
                   <canvas id="cropCanvas" width="200" height="200"></canvas>
                 </div>
+
+                <input type="text" id="usernameInput" placeholder="username" required>
                 
-                <input type="file" id="profileSelectInput" accept="image/*">
+                <input type="file" id="profileSelectInput" accept="image/*" hidden>
+                <button type="button" id="profileSelectBtn" class="submit-btn1">
+                  <i class="fa-solid fa-image"></i> Change Profile Photo
+                </button>
+
                 <button class="submit-btn" id="saveProfileImage">Save</button>
 
               </div>

@@ -276,7 +276,12 @@
                   <canvas id="cropCanvas" width="200" height="200"></canvas>
                 </div>
                 
-                <input type="file" id="profileSelectInput" accept="image/*">
+                <input type="text" id="usernameInput" placeholder="username" required>
+                
+                <input type="file" id="profileSelectInput" accept="image/*" hidden>
+                <button type="button" id="profileSelectBtn" class="submit-btn1">
+                  <i class="fa-solid fa-image"></i> Change Profile Photo
+                </button>
                 <button class="submit-btn" id="saveProfileImage">Save</button>
 
               </div>
@@ -304,7 +309,10 @@
                   <canvas id="cropBannerCanvas" width="400" height="225"></canvas>
                 </div>
                 
-                <input type="file" id="bannerSelectInput" accept="image/*">
+                <input type="file" id="bannerSelectInput" accept="image/*" hidden>
+                <button type="button" id="bannerSelectBtn" class="submit-btn1">
+                  <i class="fa-solid fa-image"></i> Change Banner Photo
+                </button>
                 <button class="submit-btn" id="saveBannerImage">Save</button>
               </div>
 
@@ -330,7 +338,11 @@
             <!-- IMAGE PREVIEW -->
             <div class="form-grid3">
               <img id="itemPreviewImage" src="Resources/assets/food.png" class="item-preview-img">
-              <input type="file" id="itemImageInput" accept="image/*">
+              <input type="file" id="itemImageInput" accept="image/*" hidden>
+
+              <button type="button" id="itemImgSelectBtn" class="submit-btn1">
+                <i class="fa-solid fa-image"></i> Change Item Photo
+              </button>
             </div>
 
             <!-- ITEM NAME -->

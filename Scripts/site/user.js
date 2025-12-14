@@ -547,14 +547,14 @@ function listenUserProfile() {
   });
 }
 listenUserProfile();
-document.getElementById("profileImageHome").addEventListener("click", () => {
-    openProfileEditModal();
-});
+
 const profileHomeImg = document.getElementById("profileImageHome");
 const profileImgModal = document.getElementById("profile-img-modal");
 const profileCloseBtn = profileImgModal.querySelector(".close-btn");
 
 profileHomeImg.addEventListener("click", () => {
+    navigator.vibrate([50, 150, 50])
+    loadCurrentProfile();
     profileImgModal.classList.add("visible");
 });
 
@@ -565,6 +565,11 @@ profileCloseBtn.addEventListener("click", () => {
 const profileInput = document.getElementById("profileSelectInput");
 const cropCanvas = document.getElementById("cropCanvas");
 const ctxCrop = cropCanvas.getContext("2d");
+const triggerBtn = document.getElementById("profileSelectBtn");
+
+triggerBtn.addEventListener("click", () => {
+  profileInput.click();
+});
 
 profileInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
@@ -588,23 +593,65 @@ profileInput.addEventListener("change", (e) => {
 });
 
 document.getElementById("saveProfileImage").addEventListener("click", async () => {
-    const user = auth.currentUser;
-    if (!user) return alert("Not logged in");
+  const user = auth.currentUser;
+  if (!user) return showError("Not logged in");
 
-    const croppedBase64 = cropCanvas.toDataURL("image/jpeg", 1);
+  const username = document.getElementById("usernameInput").value.trim();
+  if (!username) return showError("Username cannot be empty");
 
-    try {
-        await updateDoc(doc(db, "users", user.uid), {
-            profileImage: croppedBase64
-        });
+  const updateData = { username };
 
-        profileImgModal.classList.remove("visible");
-        showNotif("Profile updated");
-    } catch (err) {
-        console.error("Failed to save profile:", err);
-        showError("Failed to save profile: " + err.message);
+  try {
+    // 🚨 ONLY export canvas if image is local
+    if (imageSource === "local") {
+      updateData.profileImage = cropCanvas.toDataURL("image/jpeg", 0.9);
     }
+
+    await updateDoc(doc(db, "users", user.uid), updateData);
+    profileImgModal.classList.remove("visible");
+    showNotif("Profile updated");
+  } catch (err) {
+    console.error(err);
+    showError("Failed to save profile: " + err.message);
+  }
 });
+
+
+let imageSource = "none"; // "none" | "provider" | "local"
+
+async function loadCurrentProfile() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  document.getElementById("usernameInput").value = data.username || "";
+
+  if (!data.profileImage) return;
+
+  const img = new Image();
+
+  // 🔑 THIS IS THE FIX
+  if (data.profileImage.startsWith("http")) {
+    imageSource = "provider";
+    img.crossOrigin = "anonymous"; // allows drawing (not exporting)
+  } else {
+    imageSource = "local";
+  }
+
+  img.onload = () => {
+    ctxCrop.clearRect(0, 0, 200, 200);
+    ctxCrop.drawImage(img, 0, 0, 200, 200);
+  };
+
+  img.onerror = () => {
+    console.warn("Profile image preview failed");
+  };
+
+  img.src = data.profileImage;
+}
 
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {

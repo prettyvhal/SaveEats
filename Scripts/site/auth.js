@@ -1,176 +1,71 @@
 import { app, auth, db } from "https://cadlaxa.github.io/SaveEats/Scripts/site/firebase-init.js";
 import {
-  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  OAuthProvider
+  signInWithRedirect,
+  OAuthProvider,
+  getRedirectResult,
+  fetchSignInMethodsForEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore,
   doc,
   setDoc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+
   const loginForm = document.getElementById("loginForm");
   const signUpForm = document.getElementById("SignUpForm");
-  const restoBtn = document.getElementById("restoAcc");       // resto signup submit
-  const restoBtn1 = document.getElementById("restoAcc1");    // go to resto signup page
+  const restoBtn = document.getElementById("restoAcc");
+  const restoBtn1 = document.getElementById("restoAcc1");
   const restoForm = document.getElementById("RestoSignUpForm");
 
   const submitModal = document.getElementById("submit-modal");
   const errorModal = document.getElementById("error-modal");
   const notifModal = document.getElementById("notif-modal");
+
   const errorMessageBox = errorModal?.querySelector(".error-message");
   const notifMessageBox = notifModal?.querySelector(".notif-message");
+
   const closeButtons = document.querySelectorAll(".close-btn");
 
   const googleLoginBtn = document.getElementById("googleLoginBtn");
   const appleLoginBtn = document.getElementById("appleLoginBtn");
 
-  // ---------------------------
-  // MODALS
-  // ---------------------------
-  window.showError = function(message) {
-      if (!errorMessageBox || !errorModal) return;
-      errorMessageBox.textContent = message;
-      errorModal.classList.add("visible");
+  const isIOS = () =>
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  /* ---------------- MODALS ---------------- */
+
+  window.showError = (msg) => {
+    if (!errorModal) return;
+    errorMessageBox.textContent = msg;
+    errorModal.classList.add("visible");
   };
 
-  window.showNotif = function(message) {
-      if (!notifMessageBox || !notifModal) return;
-      notifMessageBox.textContent = message;
-      notifModal.classList.add("visible");
+  window.showNotif = (msg) => {
+    if (!notifModal) return;
+    notifMessageBox.textContent = msg;
+    notifModal.classList.add("visible");
   };
 
   closeButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      btn.closest(".modal-container")?.classList.remove("visible");
-    });
+    btn.addEventListener("click", () =>
+      btn.closest(".modal-container")?.classList.remove("visible")
+    );
   });
 
-  window.addEventListener("click", (e) => {
-    if (e.target === submitModal || e.target === errorModal) {
-      e.target.classList.remove("visible");
-    }
-  });
-
-  async function showSubmitModalAndRedirect(passedType) {
-    submitModal.classList.add("visible");
-    let userType = passedType || "user";
-    const user = auth.currentUser;
-
-    try {
-      // Only fetch from Firestore if passedType is NOT provided
-      if (!passedType && user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          userType = docSnap.data().type || "user";
-        } else {
-          showError("User document not found. Using default type.");
-        }
-      }
-    } catch (err) {
-      // Format the error message properly
-      showError("Firestore fetch failed: " + err.message);
-
-      // Fallback to cached type if available
-      const cachedType = localStorage.getItem("loggedInUserType");
-      if (cachedType) userType = cachedType;
-    }
-
-    // Save the final resolved type into cache
-    localStorage.setItem("loggedInUserType", userType);
-
-    // Redirect after 5 seconds
-    setTimeout(() => {
-      window.location.href =
-        userType === "restaurant" ?
-        "resto-dashboard.html" :
-        "home-user.html";
-    }, 5000);
-  }
-
-  // ---------------------------
-  // AUTO REDIRECT IF LOGGED IN
-  // ---------------------------
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return;
-
-    try {
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        // No user data found, sign out and redirect
-        await auth.signOut();
-        window.location.href = "index.html";
-        return;
-      }
-
-      // User data exists
-      const userType = docSnap.data().type || "user";
-      localStorage.setItem("loggedInUserType", userType);
-
-      const currentPage = window.location.pathname.split("/").pop();
-      if (
-        currentPage === "" ||
-        currentPage === "index.html" ||
-        currentPage === "sign-up.html" ||
-        currentPage === "sign-up-resto.html"
-      ) {
-        if (userType === "restaurant") {
-          window.location.href = "resto-dashboard.html";
-        } else {
-          window.location.href = "home-user.html";
-        }
-      }
-    } catch (error) {
-      showError("Error fetching user data:", error);
-      // Optional: sign out on error
-      await auth.signOut();
-      window.location.href = "index.html";
-    }
-  });
-
-  // ---------------------------
-  // LOGIN (EMAIL)
-  // ---------------------------
-  loginForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById("login-email").value.trim();
-    const password = document.getElementById("login-password").value;
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Get type from Firestore
-      const docSnap = await getDoc(doc(db, "users", user.uid));
-      const userType = docSnap.exists() ? docSnap.data().type : "user";
-
-      showSubmitModalAndRedirect(userType);
-      loginForm.reset();
-    } catch (error) {
-      showError(error.message);
-    }
-  });
+  /* ---------------- FIRESTORE PROFILE ---------------- */
 
   const writeOrUpdateUserProfile = async (user) => {
     if (!user) return;
 
-    const userRef = doc(db, "users", user.uid);
-
-    // Merge ensures first-time creation or update of missing fields
     await setDoc(
-      userRef,
+      doc(db, "users", user.uid),
       {
         email: user.email || "",
         username: user.displayName || "",
@@ -181,141 +76,258 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
-  // ---------------------------
-  // GOOGLE LOGIN
-  // ---------------------------
-  googleLoginBtn?.addEventListener("click", async (e) => {
-    e.preventDefault(); // prevent page refresh
-    const provider = new GoogleAuthProvider();
+  /* ---------------- SUBMIT MODAL + REDIRECT ---------------- */
 
+  async function showSubmitModalAndRedirect(passedType) {
+    submitModal.classList.add("visible");
+
+    let userType = passedType || "user";
+    const user = auth.currentUser;
+
+    if (!passedType && user) {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) userType = snap.data().type || "user";
+      } catch {}
+    }
+
+    localStorage.setItem("loggedInUserType", userType);
+
+    setTimeout(() => {
+      window.location.href =
+        userType === "restaurant"
+          ? "resto-dashboard.html"
+          : "home-user.html";
+    }, 3000);
+  }
+
+  /* ---------------- HANDLE REDIRECT (iOS FIX) ---------------- */
+
+  (async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      await writeOrUpdateUserProfile(result.user);
+      const result = await getRedirectResult(auth);
 
-      // redirect after Firestore write completes
-      showSubmitModalAndRedirect("user");
+      if (result?.user) {
+        await writeOrUpdateUserProfile(result.user);
+
+        // prevent onAuthStateChanged race
+        localStorage.setItem("justRedirected", "true");
+
+        showSubmitModalAndRedirect("user");
+      }
     } catch (error) {
       showError(error.message);
     }
+  })();
+
+  /* ---------------- AUTH STATE ---------------- */
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+
+    // Skip auto redirect right after redirect login
+    if (localStorage.getItem("justRedirected")) {
+      localStorage.removeItem("justRedirected");
+      return;
+    }
+
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists()) return;
+
+      const type = snap.data().type || "user";
+      localStorage.setItem("loggedInUserType", type);
+
+      const page = window.location.pathname.split("/").pop();
+      if (
+        page === "" ||
+        page === "index.html" ||
+        page === "sign-up.html" ||
+        page === "sign-up-resto.html"
+      ) {
+        window.location.href =
+          type === "restaurant"
+            ? "resto-dashboard.html"
+            : "home-user.html";
+      }
+    } catch (err) {
+      showError(err.message);
+    }
   });
 
-  // ---------------------------
-  // APPLE LOGIN
-  // ---------------------------
+  async function checkEmailExists(email) {
+    try {
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      return methods; // [] = not registered
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /* ---------------- EMAIL LOGIN ---------------- */
+
+  loginForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+
+      const snap = await getDoc(doc(db, "users", cred.user.uid));
+      const type = snap.exists() ? snap.data().type : "user";
+
+      showSubmitModalAndRedirect(type);
+      loginForm.reset();
+
+    } catch (err) {
+      if (err.code === "auth/user-not-found") {
+        showError("No account found with this email.");
+      } else if (err.code === "auth/wrong-password") {
+        showError("Incorrect password.");
+      } else if (err.code === "auth/account-exists-with-different-credential") {
+        showError("This email is registered using Google or Apple.");
+      } else {
+        showError(err.message);
+      }
+    }
+  });
+
+  /* ---------------- GOOGLE LOGIN ---------------- */
+  googleLoginBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const provider = new GoogleAuthProvider();
+
+    try {
+      if (isIOS()) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
+      const result = await signInWithPopup(auth, provider);
+      const email = result.user.email;
+
+      const methods = await checkEmailExists(email);
+
+      if (
+        methods.length &&
+        !methods.includes("google.com")
+      ) {
+        await auth.signOut();
+        return showError(
+          "This email is already registered using " +
+          methods[0].replace(".com", "")
+        );
+      }
+
+      await writeOrUpdateUserProfile(result.user);
+      showSubmitModalAndRedirect("user");
+
+    } catch (err) {
+      showError(err.message);
+    }
+  });
+
+  /* ---------------- APPLE LOGIN ---------------- */
   appleLoginBtn?.addEventListener("click", async (e) => {
-    e.preventDefault(); // prevent page refresh
+    e.preventDefault();
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
 
     try {
       const result = await signInWithPopup(auth, provider);
-      await writeOrUpdateUserProfile(result.user);
+      const email = result.user.email;
 
-      // redirect after Firestore write completes
+      const methods = await checkEmailExists(email);
+
+      if (
+        methods.length &&
+        !methods.includes("apple.com")
+      ) {
+        await auth.signOut();
+        return showError(
+          "This email is already registered using " +
+          methods[0].replace(".com", "")
+        );
+      }
+
+      await writeOrUpdateUserProfile(result.user);
       showSubmitModalAndRedirect("user");
-    } catch (error) {
-      showError(error.message);
+
+    } catch (err) {
+      showError(err.message);
     }
   });
 
-  // ---------------------------
-  // USER SIGN UP (ALWAYS USER)
-  // ---------------------------
-  restoBtn1?.addEventListener("click", () => {
-    window.location.href = "sign-up-resto.html";
-  });
+  /* ---------------- USER SIGN UP ---------------- */
 
   signUpForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("signup-email").value.trim();
-    const password = document.getElementById("signup-password").value;
-    const passwordRep = document.getElementById("password_rep").value;
-    const username_email = document.getElementById("signup-username").value.trim();
-
-    if (password !== passwordRep) {
-      showError("Passwords do not match!");
-      return;
-    }
-    if (!username_email) {
-      showError("Username is required!");
-      return;
-    }
-
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value;
+      const rep = document.getElementById("password_rep").value;
+      const username = document.getElementById("signup-username").value.trim();
 
-      // Save in Firestore
-      await setDoc(doc(db, "users", user.uid), {
+      if (password !== rep) return showError("Passwords do not match");
+
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+      await setDoc(doc(db, "users", cred.user.uid), {
         email,
-        username: username_email,
+        username,
         type: "user"
       });
 
       showSubmitModalAndRedirect("user");
       signUpForm.reset();
-    } catch (error) {
-      showError(error.message);
+    } catch (err) {
+      showError(err.message);
     }
   });
 
-  // ---------------------------
-  // RESTO SIGN UP (ALWAYS RESTO)
-  // ---------------------------
+  /* ---------------- RESTO SIGN UP ---------------- */
+
+  restoBtn1?.addEventListener("click", () =>
+    window.location.href = "sign-up-resto.html"
+  );
+
   restoBtn?.addEventListener("click", async () => {
-    const email = document.getElementById("resto-email").value.trim();
-    const password = document.getElementById("resto-password").value;
-    const passwordRep = document.getElementById("resto-password_rep").value;
-    const resto_username = document.getElementById("restoname").value.trim();
-
-    if (password !== passwordRep) {
-      showError("Passwords do not match!");
-      return;
-    }
-    if (!resto_username) {
-      showError("Restaurant name is required!");
-      return;
-    }
-
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const email = document.getElementById("resto-email").value.trim();
+      const password = document.getElementById("resto-password").value;
+      const rep = document.getElementById("resto-password_rep").value;
+      const name = document.getElementById("restoname").value.trim();
 
-      // Save in Firestore
-      await setDoc(doc(db, "users", user.uid), {
+      if (password !== rep) return showError("Passwords do not match");
+
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+      await setDoc(doc(db, "users", cred.user.uid), {
         email,
-        username: resto_username,
+        username: name,
         type: "restaurant"
       });
 
-      localStorage.setItem("loggedInUserType", "restaurant");
       showSubmitModalAndRedirect("restaurant");
       restoForm.reset();
-    } catch (error) {
-      showError(error.message);
-    }
-  });
-
-  // -------------------------------
-  // LOGOUT BUTTON
-  // -------------------------------
-  const logoutBtn = document.querySelector(".log-out-toggle");
-
-  logoutBtn?.addEventListener("click", async () => {
-    try {
-      showNotif("Logging out...");
-      navigator.vibrate?.([50, 100, 50]);
-      setTimeout(async () => {
-        await auth.signOut();
-        localStorage.clear();
-        window.location.href = "index.html";
-      }, 3000);
-
     } catch (err) {
-      console.error("Logout failed:", err);
-      showError("Logout failed. Please try again.");
+      showError(err.message);
     }
   });
+
+  /* ---------------- LOGOUT ---------------- */
+
+  document.querySelector(".log-out-toggle")?.addEventListener("click", async () => {
+    showNotif("Logging out...");
+    setTimeout(async () => {
+      await auth.signOut();
+      localStorage.clear();
+      window.location.href = "index.html";
+    }, 2000);
+  });
+
 });

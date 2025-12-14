@@ -4,7 +4,8 @@ import { doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/fireb
 import {
   addDoc,
   collection,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
@@ -31,6 +32,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const bannerModal = document.getElementById("banner-img-modal");
   const pay = new Audio("Resources/assets/Apple Pay sound effect.mp3");
 
+  const triggerBtn = document.getElementById("profileSelectBtn");
+
+  triggerBtn.addEventListener("click", () => {
+    profileFileInput.click();
+  });
+
+  const triggerBannerBtn = document.getElementById("bannerSelectBtn");
+
+  triggerBannerBtn.addEventListener("click", () => {
+    bannerFileInput.click();
+  });
+
   let selectedProfileImage = new Image();
   let selectedBannerImage = new Image();
 
@@ -43,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const editBannerBtn = document.getElementById("editBannerBtn");
   editProfileBtn.addEventListener("click", () => {
       navigator.vibrate([50, 150, 50])
+      loadCurrentProfile();
       profileModal.classList.add("visible");
       modalManager.open([profileModal]);
   });
@@ -50,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // OPEN BANNER MODAL
   editBannerBtn.addEventListener("click", () => {
       navigator.vibrate([50, 150, 50])
+      loadCurrentBanner();
       bannerModal.classList.add("visible");
       modalManager.open([bannerModal]);
       
@@ -83,6 +98,12 @@ document.addEventListener("DOMContentLoaded", () => {
   
   const itemImageInput = document.getElementById("itemImageInput");
   const itemPreviewImage = document.getElementById("itemPreviewImage");
+
+  const triggerBtn1 = document.getElementById("itemImgSelectBtn");
+  
+  triggerBtn1.addEventListener("click", () => {
+    itemImageInput.click();
+  });
 
   let selectedItemImage = new Image();
 
@@ -167,27 +188,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------------------
   // LOAD RESTO DATA
   // -------------------------------
-  onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, (user) => {
     if (!user) return window.location.href = "index.html";
     if (localStorage.getItem("loggedInUserType") !== "restaurant") return window.location.href = "home-user.html";
 
-    try {
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
+    const docRef = doc(db, "users", user.uid);
+
+    // Listen for real-time updates
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (!docSnap.exists()) return window.location.href = "index.html";
 
       const data = docSnap.data();
       restoName.textContent = data.restaurantName || data.username || "My Restaurant";
       restoEmail.textContent = user.email;
 
-      // Load images from Firestore Base64 or defaults
       profileImg.src = data.profileBase64 || "Resources/assets/profile.jpg";
       bannerImg.src = data.bannerBase64 || "Resources/assets/banner.webp";
-
-    } catch (err) {
-      console.error("Failed loading resto data:", err);
-      window.location.href = "index.html";
-    }
+    });
   });
 
   // -------------------------------
@@ -213,19 +230,102 @@ document.addEventListener("DOMContentLoaded", () => {
     profileCtx.drawImage(selectedProfileImage, startX, startY, size, size, 0, 0, profileCropSize, profileCropSize);
   }
 
+  let imageSource = "none"; // "none" | "provider" | "local"
+  
+  async function loadCurrentProfile() {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (!snap.exists()) return;
+  
+    const data = snap.data();
+    document.getElementById("usernameInput").value = data.username || "";
+  
+    if (!data.profileBase64) return;
+  
+    const img = new Image();
+  
+    // 🔑 THIS IS THE FIX
+    if (data.profileBase64.startsWith("http")) {
+      imageSource = "provider";
+      img.crossOrigin = "anonymous"; // allows drawing (not exporting)
+    } else {
+      imageSource = "local";
+    }
+  
+    img.onload = () => {
+      profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
+      profileCtx.drawImage(img, 0, 0, profileCanvas.width, profileCanvas.height);
+    };
+  
+    img.onerror = () => {
+      console.warn("Profile image preview failed");
+    };
+  
+    img.src = data.profileBase64;
+  }
+
+  async function loadCurrentBanner() {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (!snap.exists()) return;
+  
+    const data = snap.data();
+    document.getElementById("usernameInput").value = data.username || "";
+  
+    if (!data.bannerBase64) return;
+  
+    const img = new Image();
+  
+    // 🔑 THIS IS THE FIX
+    if (data.bannerBase64.startsWith("http")) {
+      imageSource = "provider";
+      img.crossOrigin = "anonymous"; // allows drawing (not exporting)
+    } else {
+      imageSource = "local";
+    }
+  
+    img.onload = () => {
+      bannerCtx.clearRect(0, 0, bannerCanvas.width, bannerCanvas.height);
+      bannerCtx.drawImage(img, 0, 0, bannerCanvas.width, bannerCanvas.height);
+    };
+  
+    img.onerror = () => {
+      console.warn("Profile image preview failed");
+    };
+  
+    img.src = data.bannerBase64;
+  }
+
   saveProfileBtn.addEventListener("click", async () => {
     const user = auth.currentUser;
-    if (!user) return alert("Not logged in");
-    if (!selectedProfileImage.src) return alert("No image selected");
+    if (!user) return showError("Not logged in");
 
-    const base64 = profileCanvas.toDataURL("image/jpeg", resolution);
+    const username = document.getElementById("usernameInput").value.trim();
+    if (!username) return showError("Username cannot be empty");
+
+    const updateData = { username };
+
+    // Only update profile image if there’s a selected image
+    if (selectedProfileImage.src) {
+      const base64 = profileCanvas.toDataURL("image/jpeg", resolution);
+      updateData.profileBase64 = base64;
+    }
+
     try {
-      await updateDoc(doc(db, "users", user.uid), { profileBase64: base64 });
-      profileImg.src = base64;
-      bannerModal.classList.remove("visible");
-      showNotif("Profile image updated!");
+      await updateDoc(doc(db, "users", user.uid), updateData);
+
+      // Update main profile icon
+      if (updateData.profileBase64) profileImg.src = updateData.profileBase64;
+
+      profileModal.classList.remove("visible");
+      showNotif("Profile updated successfully!");
     } catch (err) {
-      showError("Update failed: " + err.message);
+      console.error(err);
+      showError("Failed to save profile: " + err.message);
     }
   });
 
