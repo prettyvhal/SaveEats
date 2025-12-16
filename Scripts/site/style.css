@@ -2213,7 +2213,7 @@ html {
   display: flex;
   align-items: center;
   cursor: pointer;
-  z-index: 1;
+  z-index: 3;
 }
 
 .reservation-dot {
@@ -2769,6 +2769,7 @@ html {
     align-items: center;
     justify-content: center;
     border: 2px solid var(--orangeD);
+    z-index: 5;
     
   }
   .nav-bar::before {

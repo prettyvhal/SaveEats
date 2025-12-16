@@ -345,6 +345,4 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleIcon.classList.toggle("fa-eye-slash");
   });
 
-
-
 });

@@ -229,7 +229,7 @@ function playPitchedHoverSound() {
 }
 
 window.attachHoverListeners = function () {
-    document.querySelectorAll('.item-card, .restaurant-card').forEach(item => {
+    document.querySelectorAll('.item-card, .restaurant-card, .nav-bar').forEach(item => {
 
         // Prevent double attaching
         if (item.dataset.sfxAttached === "yes") return;

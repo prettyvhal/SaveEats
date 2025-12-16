@@ -120,6 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
             startY = 0;
             moved = false;
         });
+        if (window.attachHoverListeners) {
+            window.attachHoverListeners();
+        }
     });
 
     // Reset window position and size after closing animation finishes
