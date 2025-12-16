@@ -330,4 +330,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2000);
   });
 
+  /* ---------------- PASSWORD TOGGLE ---------------- */
+  const passwordInput = document.getElementById("login-password");
+  const togglePassword = document.getElementById("togglePassword");
+  const toggleIcon = togglePassword.querySelector("i");
+
+  togglePassword.addEventListener("click", () => {
+    // Toggle input type
+    const type = passwordInput.type === "password" ? "text" : "password";
+    passwordInput.type = type;
+
+    // Toggle icon
+    toggleIcon.classList.toggle("fa-eye");
+    toggleIcon.classList.toggle("fa-eye-slash");
+  });
+
+
+
 });

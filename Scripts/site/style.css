@@ -55,8 +55,9 @@ body {
   --mobile-icon-item: #c5fcd8c5;
   --bg-color: #a3e4f9;
   --wave: #0cbaff;
-  --radius: 15px;
-  --radius1: 20px;
+  --radius: 20px;
+  --radius1: 25px;
+  --radius-inner: 15px;
   --cursor: #ffeed050;
   --clicky: scale(0.95);
   --clicky1: scale(0.9);
@@ -352,7 +353,7 @@ body {
 }
 
 .window-header {
-  background-color: var(--orange);
+  background: linear-gradient(180deg, var(--orange), var(--orangeL));
   padding: 10px 20px;
   color: #fff;
   text-align: left;
@@ -363,7 +364,7 @@ body {
 }
 
 .window-header1 {
-  background-color: var(--orange);
+  background: linear-gradient(180deg, var(--orange), var(--orangeL));
   padding: 8px 15px;
   color: #fff;
   text-align: left;
@@ -408,7 +409,7 @@ body {
 }
 
 .home-window-content {
-  max-height: 85vh;
+  max-height: 80vh;
   padding: 10px 10px;
   text-align: center;
   background-color: var(--light-orange);
@@ -1445,7 +1446,7 @@ html {
   width: 350px;
   height: 350px;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: solid 3px var(--orange);
   background-color: var(--orangeL1);
 }
@@ -1496,7 +1497,7 @@ html {
 .form-grid3 textarea {
   background-color: var(--orangeHL);
   border: 3px solid var(--orangeL1);
-  border-radius: 6px;
+  border-radius: var(--radius-inner);
   padding: 10px;
   font-size: 16px;
   resize: none;
@@ -1556,7 +1557,7 @@ html {
   font-weight: 600;
   font-size: medium;
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-inner);
   cursor: pointer;
   transition: background 0.2s ease;
   transition: all 0.2s ease-in-out;
@@ -1578,7 +1579,7 @@ html {
   font-weight: 600;
   font-size: medium;
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-inner);
   cursor: pointer;
   transition: background 0.2s ease;
   transition: all 0.2s ease-in-out;
@@ -1711,7 +1712,7 @@ html {
     max-width: 450px;
     background: var(--orangeHL);
     color: var(--ptext);
-    border-radius: 15px;
+    border-radius: var(--radius);
     padding: 10px;
     display:flex;
     align-items:center;
@@ -1743,7 +1744,7 @@ html {
   width: 100%;
   height: 200px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 4px solid var(--orangeL);
 }
 
@@ -1871,7 +1872,7 @@ html {
   font-weight: 600;
   font-size: small;
   padding: 5px;
-  border-radius: 6px;
+  border-radius: var(--radius-inner);
   transition: background 0.2s ease;
   transition: all 0.2s ease-in-out;
   border: solid 3px var(--orangeD);
@@ -1947,13 +1948,14 @@ html {
 
 .item-card {
   background: var(--orangeHL);
-  border-radius: 12px;
+  border-radius: var(--radius);
   overflow: hidden;
   box-shadow: 0 4px 10px var(--orange);
   display: flex;
   flex-direction: column;
   transform: all 0.2s ease-in-out;
   border: solid 3px var(--orangeL);
+  position: relative;
 }
 .item-card:hover {
   box-shadow: 0 10px 25px var(--orange);
@@ -1966,31 +1968,140 @@ html {
 }
 
 .item-image {
+  position: relative;
   width: 100%;
-  height: 160px;
+  height: 100%;
   object-fit: cover;
+  padding: 8px;
+  border-radius: var(--radius);
+  z-index: 1;
 }
 
+
+.item-image-bg {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 100%;
+  height: 160%;
+  object-fit: cover;
+  filter: blur(20px);
+  transform: scale(1.25);
+  opacity: 0.7;
+  z-index: 0;
+
+  /* fade out near the bottom */
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 50%,
+    rgba(0,0,0,0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 50%,
+    rgba(0,0,0,0) 100%
+  );
+
+  transition: opacity 0.5s ease;
+}
+
+.item-image-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.1),
+    rgba(0, 0, 0, 0)
+  );
+  z-index: 1;
+}
+
+.item-image-bg1 {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 100%;
+  height: 120%;
+  object-fit: cover;
+  filter: blur(20px);
+  transform: scale(1.25);
+  opacity: 0.5;
+  z-index: 0;
+
+  /* fade out near the bottom */
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 50%,
+    rgba(0,0,0,0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 50%,
+    rgba(0,0,0,0) 100%
+  );
+
+  transition: opacity 0.5s ease;
+}
+
+.restaurant-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.1),
+    rgba(0, 0, 0, 0)
+  );
+  z-index: 1;
+}
+
+
 .item-details {
-  padding: 12px;
+  padding: 0px 12px 12px 12px;
   color: var(--ptext);
   line-height: 25px;
   display: flex;
   flex-direction: column;
   flex: 1;
-
+  text-align: center;
 }
+
 .item-details p {
   margin-top: 10px;
   font-size: 15px;
   margin-bottom: 10px;
   line-height: 20px;
 }
+.item-details h3 {
+  margin-bottom: 8px;
+  line-height: 20px;
+  z-index: 1;
+}
 
 .price-row {
   display: flex;
   justify-content: space-between;
-  font-size: 22px;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.price-img {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 18px;
+  background: var(--orange);
+  border-radius: var(--radius);
+  padding: 0px 10px 0px 10px;
+  z-index: 1;
 }
 
 .original-price {
@@ -2001,7 +2112,7 @@ html {
 }
 
 .discounted-price {
-  color: var(--orange);
+  color: var(--orangeHL);
   font-weight: bold;
 }
 
@@ -2015,7 +2126,7 @@ html {
 
 .bottom-row {
   background: var(--orangeL1);
-  border-radius: 15px;
+  border-radius: var(--radius);
   padding: 5px;
   color: var(--ptext);
   margin-top: auto;
@@ -2023,8 +2134,7 @@ html {
   padding-right: 15px;
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
-
+  text-align: center;
 }
 
 .bottom-row1 {
@@ -2033,6 +2143,7 @@ html {
   padding-right: 15px;
   display: flex;
   flex-direction: column;
+  z-index: 1;
 }
 
 .item-actions button {
@@ -2043,7 +2154,7 @@ html {
   font-weight: 600;
   font-size: medium;
   padding: 5px 10px;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
   transition: background 0.2s ease;
   transition: all 0.2s ease-in-out;
@@ -2060,16 +2171,17 @@ html {
 .restaurant-card {
   /*background: linear-gradient(0deg, var(--orangeHL) 30%, var(--orange));*/
   background: var(--orangeHL);
-  border-radius: 12px;
+  border-radius: var(--radius);
   overflow: hidden;
   box-shadow: 0 4px 10px var(--orange);
   display: flex;
   flex-direction: column;
   border: solid 3px var(--orangeL);
+  position: relative;
 }
 
 .restaurant-card:hover {
-  transform: translateY(-3px);
+  transform: scale(1.03);
   box-shadow: 0 10px 25px var(--orange);
   border: solid 3px var(--orangeD);
   background: var(--orangeL1);
@@ -2088,15 +2200,20 @@ html {
 
 .item-image-wrapper {
   position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: visible;
+  border-radius: var(--radius);
 }
 
 .reservation-preview {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 15px;
+  left: 15px;
   display: flex;
   align-items: center;
   cursor: pointer;
+  z-index: 1;
 }
 
 .reservation-dot {
@@ -2115,7 +2232,7 @@ html {
   color: white;
   font-weight: bold;
   text-shadow: 0 0 2px black;
-  border-radius: 15px;
+  border-radius: var(--radius);
 }
 
 /* Modal reservation user card */
@@ -2173,10 +2290,19 @@ html {
 }
 
 /* Banner */
-.restaurant-banner img {
+.restaurant-banner {
   width: 100%;
   height: 90px;
   object-fit: cover;
+  z-index: 0;
+}
+
+.restaurant-banner-foreground {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  z-index: 1;
+  position: relative;
 }
 
 .restaurant-logo-container {
@@ -2184,6 +2310,7 @@ html {
   display: flex;
   justify-content: center;
   margin-top: -50px;
+  z-index: 1;
 }
 
 /* Circular profile image */
@@ -2231,7 +2358,7 @@ html {
   max-height: 80%;
   transform: translate(-50%, 300%);
   background: var(--orangeL1);
-  border-radius: 20px;
+  border-radius: var(--radius);
   box-shadow: 0 5px 30px rgba(0, 0, 0, 0.521);
   transition: transform 0.3s ease-in-out;
   z-index: 2000;
@@ -2288,16 +2415,16 @@ html {
 }
 
 .qr-center canvas {
-  border-radius: 15px;
+  border-radius: var(--radius);
 }
 
 #qr-reader {
   width: 100%;
   height: 280px;
-  border-radius: 15px;
+  border-radius: var(--radius);
   overflow: hidden;
   background: #000;  /* prevents auto collapse */
-  border-radius: 15px;
+  border-radius: var(--radius);
 }
 
 .qr-note {
@@ -2324,7 +2451,7 @@ html {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: 15px;
+  border-radius: var(--radius);
 }
 
 .error-message {
@@ -2339,7 +2466,7 @@ html {
   padding: 0px 20px 0px;
   position: relative;
   gap: 20px;
-  border-radius: 15px;
+  border-radius: var(--radius);
   background: linear-gradient(90deg, var(--light-orange) 20%, var(--orangeL1), var(--orange));
   margin-bottom: 10px;
   transition: all 0.3s ease-in-out;
@@ -2391,6 +2518,26 @@ html {
   to { transform: rotate(360deg); }
 }
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  flex: 1;
+  padding-right: 40px; /* space for the icon */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 18px;
+  color: var(--orange);
+}
+
 @media (max-width: 992px) {
 
   .project-grid-container {
@@ -2405,7 +2552,7 @@ html {
     padding: 0px 20px 0px;
     position: relative;
     gap: 20px;
-    border-radius: 15px;
+    border-radius: var(--radius);
     background: linear-gradient(90deg, var(--light-orange) 20%, var(--orangeL1), var(--orange));
     margin-bottom: 10px;
   }
@@ -2508,8 +2655,8 @@ html {
   }
 
   .item-details p {
-    margin-top: 10px;
-    font-size: 12px;
+    margin-top: 15px;
+    font-size: 15px;
     line-height: 15px;
     display: none;
   }
@@ -2530,13 +2677,11 @@ html {
   .original-price {
     text-decoration: line-through;
     opacity: 0.4;
-    color: var(--ptext);
     font-weight: bold;
     font-size: 18px;
   }
 
   .discounted-price {
-    color: var(--orange);
     font-weight: bold;
   }
 
@@ -2554,13 +2699,13 @@ html {
     font-weight: 600;
     font-size: medium;
     padding: 5px 5px;
-    border-radius: 6px;
+    border-radius: var(--radius-inner);
     
   }
   .bottom-row b,
   .bottom-row p {
-    font-size: 13px;
-    line-height: 15px;
+    font-size: 18px;
+    line-height: 18px;
   }
   
   .fb-header {
@@ -2903,7 +3048,7 @@ html {
     align-items: center;
     padding: 20px;
     gap: 20px;
-    border-radius: 15px;
+    border-radius: var(--radius);
     background: linear-gradient(180deg, var(--light-orange) 40%, var(--orangeL1), var(--orange));
     margin-bottom: 10px;
     position: relative;

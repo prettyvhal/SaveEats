@@ -9,7 +9,8 @@ import {
   getDoc,
   doc,
   updateDoc,
-  increment
+  increment,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 window.addEventListener("load", loadRestaurants);
@@ -43,7 +44,8 @@ function loadRestaurants() {
 
       div.innerHTML = `
         <div class="restaurant-banner">
-          <img src="${banner}" alt="Banner">
+          <img class="item-image-bg1" src="${logo}">
+          <img src="${banner}" alt="Banner" class="restaurant-banner-foreground">
         </div>
         <div class="restaurant-logo-container">
           <img class="restaurant-logo" src="${logo}" alt="Logo">
@@ -159,6 +161,11 @@ function renderItems() {
       expireStr = date.toLocaleString();
     }
 
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userId = user.uid;
+
     const card = document.createElement("div");
     card.className = "item-card";
 
@@ -169,17 +176,24 @@ function renderItems() {
       : "No item description";
 
     card.innerHTML = `
-      <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
+      <div class="item-image-wrapper">
+        <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
+        <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image-bg">
+        <div class="reservation-preview" id="reservationPreview-${userId}"></div>
+        
+        <div class="price-img">
+            <span class="discounted-price">₱${item.discountedPrice}</span>
+        </div>
+      </div>
       <div class="item-details">
         <h3>${item.name}</h3>
-        <p>${desc}</p>
 
         <div class="bottom-row">
           <div class="price-row">
             <span class="original-price">₱${item.originalPrice}</span>
-            <span class="discounted-price">₱${item.discountedPrice}</span>
+            <b>${item.quantity} left</b>
           </div>
-          <p>${item.quantity} left</p>
+          
           <b>Expires: ${expireStr}</b>
         </div>
 
@@ -690,21 +704,28 @@ function listenReservedItems(userId) {
     where("userId", "==", userId),
     where("redeemed", "==", false)
   );
-
+  let reservationSortOrder = "asc"; 
   onSnapshot(q, snap => {
-    const newReservationIds = new Set(snap.docs.map(d => d.id));
+    reservationCards.forEach(v => v.unsubscribeItem?.());
+    reservationCards.clear();
+    reservedGrid.innerHTML = "";
 
-    // Remove old cards
-    reservationCards.forEach((val, resId) => {
-      if (!newReservationIds.has(resId)) {
-        val.unsubscribeItem?.();
-        val.div.remove();
-        reservationCards.delete(resId);
-      }
+    const sortedDocs = [...snap.docs].sort((a, b) => {
+      const tA = a.data().reservedAt?.toDate
+        ? a.data().reservedAt.toDate().getTime()
+        : new Date(a.data().reservedAt).getTime();
+
+      const tB = b.data().reservedAt?.toDate
+        ? b.data().reservedAt.toDate().getTime()
+        : new Date(b.data().reservedAt).getTime();
+
+      return reservationSortOrder === "desc"
+        ? tA - tB
+        : tB - tA;
     });
 
     // Add/update reservations
-    snap.docs.forEach(docSnap => {
+    sortedDocs.forEach(docSnap => {
       const reservation = { ...docSnap.data(), id: docSnap.id };
 
       if (!reservationCards.has(reservation.id)) {
@@ -718,19 +739,31 @@ function listenReservedItems(userId) {
           const item = itemSnap.exists() ? itemSnap.data() : {};
 
           div.innerHTML = `
-            <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
+            <div class="item-image-wrapper">
+              <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
+              <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image-bg">
+              
+              <div class="price-img">
+                  <span class="discounted-price">₱${item.discountedPrice}</span>
+              </div>
+            </div>
             <div class="item-details">
-              <h3>${item.name || reservation.name}</h3>
+              <h3>${item.name}</h3>
+
               <div class="bottom-row">
                 <div class="price-row">
-                  <span class="original-price">₱${item.originalPrice ?? 'N/A'}</span>
-                  <span class="discounted-price">₱${item.discountedPrice ?? 'N/A'}</span>
+                  <span class="original-price">₱${item.originalPrice}</span>
+                  <b>${item.quantity} left</b>
                 </div>
-                <p>Reserved At: ${reservation.reservedAt?.toDate ? reservation.reservedAt.toDate().toLocaleString() : new Date(reservation.reservedAt).toLocaleString()}</p>
-                <div class="item-actions">
-                  <button class="redeem-btn">Redeem</button>
-                </div>
+                
+                <b>Reserved At: ${reservation.reservedAt?.toDate ? reservation.reservedAt.toDate().toLocaleString() : new Date(reservation.reservedAt).toLocaleString()}</b>
               </div>
+
+            </div>
+
+            <div class="item-actions">
+              <button class="cancel-redeem-btn">Cancel</button>
+              <button class="redeem-btn">Redeem</button>
             </div>
           `;
 
@@ -752,6 +785,19 @@ function listenReservedItems(userId) {
 
             openReserveModal(reservation.id, reservation.itemId);
           };
+
+          const cancelBtn = div.querySelector(".cancel-redeem-btn");
+          cancelBtn.onclick = async () => {
+            try {
+              await deleteDoc(doc(db, "reservations", reservation.id));
+              // UI auto-updates via onSnapshot
+              showNotif("Reservation cancelled");
+            } catch (err) {
+              console.error("Failed to cancel reservation:", err);
+              showError("Failed to cancel reservation. Please try again.");
+            }
+          };
+
         });
 
         reservationCards.set(reservation.id, { div, unsubscribeItem });

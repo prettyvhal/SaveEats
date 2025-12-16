@@ -156,19 +156,22 @@ function createItemElement(id, item) {
   div.innerHTML = `
     <div class="item-image-wrapper">
       <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
+      <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image-bg">
       <div class="reservation-preview" id="reservationPreview-${id}"></div>
+      
+      <div class="price-img">
+          <span class="discounted-price">₱${item.discountedPrice}</span>
+      </div>
     </div>
     <div class="item-details">
       <h3>${item.name}</h3>
-      <p>${desc}</p>
 
       <div class="bottom-row">
         <div class="price-row">
           <span class="original-price">₱${item.originalPrice}</span>
-          <span class="discounted-price">₱${item.discountedPrice}</span>
+          <b>${item.quantity} left</b>
         </div>
         
-        <p>Stock: ${item.quantity}</p>
         <b>Expires: ${expireStr}</b>
       </div>
 
