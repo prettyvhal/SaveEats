@@ -179,7 +179,7 @@ function renderItems() {
       <div class="item-image-wrapper">
         <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image">
         <img src="${item.imageBase64 || 'assets/default-food.png'}" class="item-image-bg">
-        <div class="reservation-preview" id="reservationPreview-${userId}"></div>
+        <div class="reservation-preview" id="reservationPreview-${item.id}"></div>
         
         <div class="price-img">
             <span class="discounted-price">₱${item.discountedPrice}</span>
@@ -199,9 +199,62 @@ function renderItems() {
 
       </div>
     `;
-
+  
     itemsGrid.appendChild(card);
     card.addEventListener("click", () => openUserItemModal(item));
+
+    // Reservation dots overlay
+    const previewId = `reservationPreview-${item.id}`;
+    const previewContainer = card.querySelector(`#${previewId}`);
+
+    if (!previewContainer) return;
+
+    const q = query(
+      collection(db, "reservations"),
+      where("itemId", "==", item.id),
+      where("redeemed", "==", false)
+    );
+
+    onSnapshot(q, async (snap) => {
+      previewContainer.innerHTML = "";
+
+      const docs = snap.docs.slice(0, 5);
+
+      for (const docSnap of docs) {
+        const reservation = docSnap.data();
+
+        let profileSrc = "Resources/assets/profile.jpg";
+
+        try {
+          if (reservation.userId === auth.currentUser?.uid && auth.currentUser.photoURL) {
+            profileSrc = auth.currentUser.photoURL;
+          } else {
+            const userSnap = await getDoc(doc(db, "users", reservation.userId));
+            if (userSnap.exists() && userSnap.data().profileImage) {
+              profileSrc = userSnap.data().profileImage;
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to load profile image", e);
+        }
+
+        const dot = document.createElement("img");
+        dot.className = "reservation-dot";
+        dot.src = profileSrc;
+        dot.title = reservation.userId;
+
+        previewContainer.appendChild(dot);
+      }
+
+      // +N indicator
+      if (snap.docs.length > 5) {
+        const more = document.createElement("span");
+        more.className = "reservation-dot-more";
+        more.textContent = `+${snap.docs.length - 5}`;
+        previewContainer.appendChild(more);
+      }
+    });
+
     // Re-attach hover/click sounds only once
     if (window.attachHoverListeners) {
       window.attachHoverListeners();
@@ -534,7 +587,8 @@ qrBackdrop.addEventListener("click", closeRedeemModal);
 
 function listenUserProfile() {
   auth.onAuthStateChanged(async user => {
-    if (!user) return;
+    if (!user) return window.location.href = "index.html";
+    if (localStorage.getItem("loggedInUserType") !== "user") return window.location.href = "home-user.html";
 
     const profileImg = document.getElementById("profileImageHome");
     const userRef = doc(db, "users", user.uid);
@@ -832,6 +886,7 @@ document.getElementById("reserveItemBtn").addEventListener("click", async () => 
     const availableStock = (itemData.quantity ?? 0) - reservedCount;
 
     if (availableStock <= 0) {
+
       return showError("Sorry, all remaining stock has already been reserved.");
     }
 
@@ -849,6 +904,9 @@ document.getElementById("reserveItemBtn").addEventListener("click", async () => 
     });
 
     showNotif(`Item "${itemData.name}" reserved successfully!`);
+    const modal = document.getElementById("Items-modal");
+    modal.classList.remove("visible");
+    modalManager.close([modal]);
   } catch (err) {
     console.error(err);
     showError("Failed to reserve item: " + err.message);

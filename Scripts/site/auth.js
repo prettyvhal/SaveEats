@@ -64,16 +64,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const writeOrUpdateUserProfile = async (user) => {
     if (!user) return;
 
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        email: user.email || "",
-        username: user.displayName || "",
-        profileImage: user.photoURL || null,
-        type: "user"
-      },
-      { merge: true }
-    );
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    const existing = snap.exists() ? snap.data() : {};
+
+    const updates = {
+      email: user.email || existing.email || "",
+      type: existing.type || "user"
+    };
+
+    if (user.displayName) updates.username = user.displayName;
+    if (user.photoURL) updates.profileImage = user.photoURL;
+
+    await setDoc(userRef, updates, { merge: true });
   };
 
   /* ---------------- SUBMIT MODAL + REDIRECT ---------------- */
