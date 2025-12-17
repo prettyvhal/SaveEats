@@ -141,10 +141,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch { /* ignore */ }
     }
 
-    //await writeOrUpdateUserProfile(currentUser);
     try {
       // Skip redirect if we already redirected
-      if (localStorage.getItem("redirected")) return;
+      //if (localStorage.getItem("redirected")) return;
 
       const snap = await getDoc(doc(db, "users", currentUser.uid));
       if (!snap.exists()) return;
