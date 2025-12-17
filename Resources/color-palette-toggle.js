@@ -5,7 +5,8 @@ import {
 import {
     doc,
     updateDoc,
-    getDoc
+    getDoc,
+    setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
@@ -183,34 +184,59 @@ function resetHideTimer() {
     hueSlider.addEventListener(event, resetHideTimer);
 });
 
-// Apply palette + save to cookies
+// Apply palette + save to cookies / Firestore
 palettes.forEach(palette => {
-    palette.addEventListener('click', () => {
+    palette.addEventListener('click', async () => {
         const choice = palette.dataset.palette;
         const paletteIcon = paletteBtn.querySelector("i");
         paletteIcon.classList.add("switching");
 
+        let hueValue;
 
         if (choice === "hue-shift") {
-            const newHue = Math.floor(Math.random() * 360);
+            hueValue = Math.floor(Math.random() * 360);
 
-            // Cache both theme + hue
+            // Save to cookies / localStorage
             document.cookie = `theme=hue-shift; path=/; max-age=31536000`;
-            document.cookie = `hueShift=${newHue}; path=/; max-age=31536000`;
+            document.cookie = `hueShift=${hueValue}; path=/; max-age=31536000`;
 
-            applyHueShiftTheme(newHue);
-            saveThemeToFirestore("hue-shift", newHue);
+            applyHueShiftTheme(hueValue);
+            saveUserTheme("hue-shift", hueValue);
         } else {
             document.cookie = `theme=${choice}; path=/; max-age=31536000`;
             applyTheme(choice);
             const themeHue = getThemeHue(themes[choice]);
-            saveThemeToFirestore(choice, themeHue);
+
+            saveUserTheme(choice, themeHue);
+        }
+
+        // Save to Firestore only if user type is "user"
+        const user = auth.currentUser;
+        if (user) {
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+                if (!docSnap.exists()) {
+                    console.log("User document does not exist.");
+                } else {
+                    const data = docSnap.data();
+                    if (data?.type === "user") {
+                        await saveThemeToFirestore(choice, hueValue);
+                        console.log("✅ Theme saved to Firestore for user type 'user'");
+                    } else {
+                        console.log("Not a 'user' type, skipping Firestore save");
+                    }
+                }
+            } catch (err) {
+                console.error("❌ Failed saving theme to Firestore:", err);
+            }
+        } else {
+            console.log("No authenticated user found");
         }
 
         setTimeout(() => {
             paletteIcon.classList.remove("switching");
         }, 800);
-        //tryShowModalMessage('color');
 
         const randomSFX = sfxSelects[Math.floor(Math.random() * sfxSelects.length)];
         playSound(randomSFX);
@@ -237,6 +263,18 @@ window.addEventListener("load", () => {
     }
 });
 
+// On page load
+window.addEventListener("load", () => {
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Logged in → load user theme from Firestore
+            loadUserTheme("green");
+        } else {
+            // Not logged in → load cached theme from cookies/localStorage
+            loadUserThemeFromCache("green");
+        }
+    });
+});
 
 function applyTheme(name) {
     if (name === "hue-shift") {
@@ -257,7 +295,6 @@ function applyTheme(name) {
 
     const themeHue = getThemeHue(themeVars);
     hueSlider.value = themeHue;
-
     document.cookie = `hueShift=${themeHue}; path=/; max-age=31536000`;
 }
 
@@ -401,6 +438,34 @@ function isRestoDashboard() {
   return path.includes("resto-dashboard.html") || path.includes("resto-dashboard");
 }
 
+async function saveUserTheme(themeName, hueValue) {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+        const userRef = doc(db, "users", user.uid);
+
+        // Check if user type is "user"
+        const docSnap = await getDoc(userRef);
+        const data = docSnap.exists() ? docSnap.data() : {};
+        if (data.type !== "user") return; // Only save for normal users
+
+        await setDoc(
+            userRef,
+            {
+                theme: themeName,
+                hueShift: hueValue ?? null,
+                themeUpdatedAt: new Date()
+            },
+            { merge: true }
+        );
+
+        console.log("✅ User theme saved to Firestore");
+    } catch (err) {
+        console.error("❌ Failed to save user theme:", err.message);
+    }
+}
+
 async function saveThemeToFirestore(themeName, hueValue) {
     if (!isRestoDashboard()) return;
 
@@ -476,34 +541,47 @@ let currentRestoTheme = null;
 const restoModal = document.getElementById("resto-modal");
 
 
-function applyModalTheme(themeName, hueValue) {
+async function getUserThemeFromFirestore() {
+    const user = auth.currentUser;
+    if (!user) return null;
+
+    try {
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        if (!docSnap.exists()) return null;
+
+        const data = docSnap.data();
+        return {
+            theme: data.theme || "green",
+            hue: data.hueShift ?? 0
+        };
+    } catch (err) {
+        console.error("Failed to get theme from Firestore:", err);
+        return null;
+    }
+}
+
+async function applyModalTheme(themeName, hueValue) {
     if (themeName) {
-        // Apply the restaurant's temporary theme
+        // Apply restaurant temporary theme
         if (themeName === "hue-shift") {
             applyHueShiftTheme(hueValue ?? 0);
         } else {
             applyTheme(themeName);
-            if (hueValue != null && themeName === "hue-shift") {
-                applyHueShiftTheme(hueValue);
-            }
         }
         currentRestoTheme = { theme: themeName, hue: hueValue };
     } else {
-        // Revert to the user's last cached theme (not green)
-        let cachedTheme = document.cookie.split('; ').find(r => r.startsWith("theme="))?.split("=")[1];
-        let cachedHue = parseInt(document.cookie.split('; ').find(r => r.startsWith("hueShift="))?.split("=")[1]);
+        // Modal closed → restore user's theme from Firestore
+        const userTheme = await getUserThemeFromFirestore();
 
-        if (!cachedTheme) {
-            cachedTheme = localStorage.getItem("savedTheme") || "green";
-            cachedHue = parseInt(localStorage.getItem("savedHue")) || 0;
-        }
+        if (!userTheme) return;
 
-        if (cachedTheme === "hue-shift") {
-            applyHueShiftTheme(cachedHue);
-            hueSlider.value = cachedHue;
+        if (userTheme.theme === "hue-shift") {
+            applyHueShiftTheme(userTheme.hue ?? 0);
+            hueSlider.value = userTheme.hue ?? 0;
         } else {
-            applyTheme(cachedTheme);
-            hueSlider.value = getThemeHue(themes[cachedTheme]);
+            applyTheme(userTheme.theme);
+            hueSlider.value = getThemeHue(themes[userTheme.theme]);
         }
 
         currentRestoTheme = null;
@@ -522,7 +600,6 @@ if (restoModal) {
                     const hue = parseInt(restoModal.dataset.hueShift) || 0;
                     applyModalTheme(themeName, hue);
                 } else {
-                    // Modal closed → revert to user theme
                     applyModalTheme(null);
                 }
             }
@@ -535,7 +612,7 @@ window.addEventListener("load", () => {
     if (isRestoDashboard()) {
         auth.onAuthStateChanged(user => {
             if (user) {
-                loadUserTheme("green"); // fallback if Firestore has no theme
+                loadUserTheme("green");
             } else {
                 // Apply cached cookie/localStorage theme for unauthenticated users
                 loadUserThemeFromCache();
@@ -547,10 +624,7 @@ window.addEventListener("load", () => {
 function loadUserThemeFromCache() {
     let cachedTheme = document.cookie.split('; ').find(r => r.startsWith("theme="))?.split("=")[1];
     let cachedHue = parseInt(document.cookie.split('; ').find(r => r.startsWith("hueShift="))?.split("=")[1]);
-
-    if (!cachedTheme) cachedTheme = localStorage.getItem("savedTheme") || "green";
-    if (!cachedHue) cachedHue = parseInt(localStorage.getItem("savedHue")) || 0;
-
+    
     if (cachedTheme === "hue-shift") {
         applyHueShiftTheme(cachedHue);
         hueSlider.value = cachedHue;
