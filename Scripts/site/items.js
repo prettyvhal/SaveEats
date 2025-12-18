@@ -130,15 +130,15 @@ function renderItemsGrid() {
                                : (valA < valB ? 1 : valA > valB ? -1 : 0);
   });
 
-  sorted.forEach(item => {
-    itemsGrid.appendChild(createItemElement(item.id, item));
+  sorted.forEach((item, index) => {
+    itemsGrid.appendChild(createItemElement(item.id, item, index));
   });
 }
 
 // -------------------------------
 // ITEM CARD
 // -------------------------------
-function createItemElement(id, item) {
+function createItemElement(id, item, index) {
   const div = document.createElement("div");
   div.className = "item-card";
 
@@ -182,6 +182,15 @@ function createItemElement(id, item) {
       <button onclick="deleteItem('${id}')">Delete</button>
     </div>
   `;
+
+    requestAnimationFrame(() => {
+      div.style.transitionDelay = `${index * 60}ms`;
+      div.getBoundingClientRect();
+      div.classList.add("enter");
+      setTimeout(() => {
+        div.style.transitionDelay = "0ms";
+      }, index * 60 + 500);
+    });
     /*div.addEventListener("click", () => {
       editItem(id);
     });*/

@@ -27,7 +27,7 @@ function loadRestaurants() {
 
     let count = 0;
 
-    snap.forEach(docSnap => {
+    snap.forEach((docSnap, index) => {
       const resto = docSnap.data();
 
       if (resto.type !== "restaurant") return;
@@ -57,6 +57,15 @@ function loadRestaurants() {
 
       div.onclick = () => openRestaurant(name, restoId, logo, banner);
       grid.appendChild(div);
+
+      requestAnimationFrame(() => {
+        div.style.transitionDelay = `${index * 60}ms`;
+        div.getBoundingClientRect();
+        div.classList.add("enter");
+        setTimeout(() => {
+          div.style.transitionDelay = "0ms";
+        }, index * 60 + 500);
+      });
     });
 
     if (count === 0) emptyState.style.display = "flex";
@@ -154,7 +163,7 @@ function renderItems() {
                                : (valA < valB ? 1 : valA > valB ? -1 : 0);
   });
 
-  sortedItems.forEach(item => {
+  sortedItems.forEach((item, index) => {
     let expireStr = "N/A";
     if (item.expiryTime) {
       const date = item.expiryTime.toDate ? item.expiryTime.toDate() : new Date(item.expiryTime);
@@ -201,6 +210,15 @@ function renderItems() {
     `;
   
     itemsGrid.appendChild(card);
+    requestAnimationFrame(() => {
+      card.style.transitionDelay = `${index * 60}ms`;
+      card.getBoundingClientRect();
+      card.classList.add("enter");
+      setTimeout(() => {
+        card.style.transitionDelay = "0ms";
+      }, index * 60 + 500);
+    });
+
     card.addEventListener("click", () => openUserItemModal(item));
 
     // Reservation dots overlay
@@ -722,12 +740,26 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.classList.add("active");
 
     const target = btn.dataset.tab;
+    const grids = document.querySelectorAll("[data-tab-content]");
 
-    document.querySelectorAll("[data-tab-content]").forEach(grid => {
-      grid.style.display = "none";
+    grids.forEach(grid => {
+      if (grid.dataset.tabContent === target) {
+        // Remove display:none first
+        grid.style.display = "grid";
+
+        // Show + animate
+        grid.classList.remove("hidden");
+        Array.from(grid.children).forEach((child, i) => {
+          child.classList.remove("enter");
+          setTimeout(() => child.classList.add("enter"), i * 60); // stagger
+        });
+      } else {
+        // Hide others
+        grid.classList.add("hidden");
+        grid.style.display = "none"; // hide completely
+        Array.from(grid.children).forEach(child => child.classList.remove("enter"));
+      }
     });
-
-    document.querySelector(`[data-tab-content='${target}']`).style.display = "grid";
   });
 });
 
@@ -754,9 +786,18 @@ function listenReservedItems(userId) {
   );
   let reservationSortOrder = "asc"; 
   onSnapshot(q, snap => {
-    reservationCards.forEach(v => v.unsubscribeItem?.());
-    reservationCards.clear();
-    reservedGrid.innerHTML = "";
+    const newIds = new Set(snap.docs.map(d => d.id));
+    // Animate removals
+    reservationCards.forEach(({ div, unsubscribeItem }, id) => {
+      if (!newIds.has(id)) {
+        div.classList.add("exit");
+        setTimeout(() => {
+          unsubscribeItem?.();
+          div.remove();
+          reservationCards.delete(id);
+        }, 350);
+      }
+    });
 
     const sortedDocs = [...snap.docs].sort((a, b) => {
       const tA = a.data().reservedAt?.toDate
@@ -773,13 +814,29 @@ function listenReservedItems(userId) {
     });
 
     // Add/update reservations
-    sortedDocs.forEach(docSnap => {
+    sortedDocs.forEach((docSnap, index) => {
       const reservation = { ...docSnap.data(), id: docSnap.id };
 
       if (!reservationCards.has(reservation.id)) {
         const div = document.createElement("div");
         div.className = "item-card";
-        reservedGrid.appendChild(div);
+
+        // Insert at correct position
+        if (index >= reservedGrid.children.length) {
+          reservedGrid.appendChild(div);
+        } else {
+          reservedGrid.insertBefore(div, reservedGrid.children[index]);
+        }
+
+        // Trigger entrance animation
+        requestAnimationFrame(() => {
+          div.style.transitionDelay = `${index * 60}ms`;
+          div.getBoundingClientRect();
+          div.classList.add("enter");
+          setTimeout(() => {
+            div.style.transitionDelay = "0ms";
+          }, index * 60 + 500);
+        });
 
         // Listen to item document in realtime
         const itemRef = doc(db, "items", reservation.itemId);
