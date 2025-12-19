@@ -234,7 +234,7 @@ function renderItems() {
 
     card.addEventListener("click", () => {
         if (!isAvailable) {
-            showNotif("This item is unavailable :(");
+            showError("This item is unavailable :(");
             return;
         }
         openUserItemModal(item);
@@ -894,7 +894,7 @@ function listenReservedItems(userId) {
           const redeemBtn = div.querySelector(".redeem-btn");
           redeemBtn.onclick = () => {
             if (!isAvailable) {
-              showNotif("This item is unavailable, you cannot redeem it, sorry :(");
+              showError("This item is unavailable, you cannot redeem it, sorry :(");
               return;
             }
 

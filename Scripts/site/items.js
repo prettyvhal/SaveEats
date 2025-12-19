@@ -86,6 +86,14 @@ auth.onAuthStateChanged((user) => {
   subscribeToItems(user.uid);
 });
 
+auth.onAuthStateChanged(user => {
+  if (user) {
+    startAvailabilityBackgroundSync(60_000); // every 1 min
+  } else {
+    stopAvailabilityBackgroundSync();
+  }
+});
+
 // -------------------------------
 // SUBSCRIBE & RENDER
 // -------------------------------
@@ -539,46 +547,51 @@ function clearItemForm() {
   document.querySelector(".window-title").textContent = "Adding new Item";
 }
 
-function setupExpiredItemsListener() {
-  const itemsCol = collection(db, "items");
+let availabilitySyncTimer = null;
 
-  onSnapshot(itemsCol, snapshot => {
+function startAvailabilityBackgroundSync(intervalMs = 60_000) {
+  if (availabilitySyncTimer) return; // prevent duplicates
+
+  availabilitySyncTimer = setInterval(async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const q = query(
+        collection(db, "items"),
+        where("ownerId", "==", user.uid)
+      );
+
+      const snap = await getDocs(q);
+      if (snap.empty) return;
+
+      const now = Date.now();
       const batch = writeBatch(db);
-      const now = new Date();
-      let updatedCount = 0;
+      let updated = 0;
 
-      snapshot.docs.forEach(docSnap => {
-          const item = docSnap.data();
+      snap.docs.forEach(docSnap => {
+        const item = docSnap.data();
+        if (!item.expiryTime) return;
 
-          // Determine expiry date
-          let expiryDate = null;
-          if (item.expiryTime) {
-              if (typeof item.expiryTime.toDate === "function") {
-                  expiryDate = item.expiryTime.toDate();
-              } else {
-                  expiryDate = new Date(item.expiryTime);
-              }
-          }
+        const expiry = item.expiryTime.toDate
+          ? item.expiryTime.toDate().getTime()
+          : new Date(item.expiryTime).getTime();
 
-          // Default available to true if undefined
-          const isAvailable = item.available !== undefined ? item.available : true;
+        const available = item.available !== undefined ? item.available : true;
 
-          // If expiry is past, mark unavailable
-          if (expiryDate && expiryDate <= now && isAvailable) {
-              batch.update(docSnap.ref, { available: false });
-              updatedCount++;
-          }
-
-          // If expiry is in the future and previously unavailable, mark available again
-          if (expiryDate && expiryDate > now && !isAvailable) {
-              batch.update(docSnap.ref, { available: true });
-              updatedCount++;
-          }
+        // 🔒 Expired → mark unavailable ONCE
+        if (expiry <= now && available === true) {
+          batch.update(docSnap.ref, { available: false });
+          updated++;
+        }
       });
 
-      if (updatedCount > 0) batch.commit();
-      if (updatedCount > 0) console.log(`Updated availability for ${updatedCount} items`);
-  });
+      if (updated > 0) {
+        await batch.commit();
+        console.log(`✔ Background sync: ${updated} items marked unavailable`);
+      }
+    } catch (err) {
+      console.error("Availability sync failed:", err.message);
+    }
+  }, intervalMs);
 }
-
-setupExpiredItemsListener();
