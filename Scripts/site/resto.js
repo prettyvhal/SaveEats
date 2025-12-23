@@ -8,6 +8,56 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("notif-modal2");
+  const yesBtn = document.getElementById("yesBtn");
+  const noBtn = document.getElementById("noBtn");
+  const closeBtn = modal.querySelector(".close-btn");
+  const message = modal.querySelector(".notif-message");
+
+  // Customize message
+  message.textContent = "Enable notifications to receive updates from SaveEats 🥕";
+
+  if (
+    'Notification' in window &&
+    Notification.permission === 'default' &&
+    !localStorage.getItem('notifChoice')
+  ) {
+    modal.classList.add("visible");
+  }
+
+  // YES → Ask permission
+  yesBtn.addEventListener("click", async () => {
+    modal.classList.remove("visible");
+
+    const granted = await window.requestNotificationPermission();
+
+    localStorage.setItem('notifChoice', 'asked');
+
+    if (granted) {
+      window.sendNotification(
+        'Welcome to SaveEats! 🥕',
+        {
+          body: 'You will now receive notifications from SaveEats.',
+          icon: 'Resources/assets/icon1.png',
+          data: { url: 'home-user.html' }
+        }
+      );
+    }
+  });
+
+  // NO → Remember choice, don’t ask again
+  noBtn.addEventListener("click", () => {
+    localStorage.setItem('notifChoice', 'declined');
+    modal.classList.remove("visible");
+  });
+
+  // Close (same as No)
+  closeBtn.addEventListener("click", () => {
+    localStorage.setItem('notifChoice', 'dismissed');
+    modal.classList.remove("visible");
+  });
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   // -------------------------------

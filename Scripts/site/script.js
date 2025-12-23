@@ -9,11 +9,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrscanner = document.querySelector(".qr-center");
 
     if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('Scripts/site/service-worker.js')
-        .then(reg => console.log('Service Worker registered', reg))
-        .catch(err => console.log('Service Worker registration failed', err));
-    });
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('Scripts/site/service-worker.js')
+            .then(reg => console.log('Service Worker registered', reg))
+            .catch(err => console.log('Service Worker registration failed', err));
+        });
+    }
+
+    // Request permission once
+    window.requestNotificationPermission = async function () {
+        if (!('Notification' in window)) return false;
+
+        // Already granted
+        if (Notification.permission === 'granted') {
+            return true;
+        }
+
+        // Already denied
+        if (Notification.permission === 'denied') {
+            console.warn('Notification permission previously denied');
+            return false;
+        }
+
+        // Ask user
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
+    };
+
+
+    // Send a notification anywhere
+    window.sendNotification = async function(title, options = {}) {
+    if (!('serviceWorker' in navigator)) return;
+
+    if (Notification.permission !== 'granted') {
+        console.warn('Notification permission not granted.');
+        return;
+    }
+
+    const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+            registration.showNotification(title, options);
+        }
     }
     
     let highestZIndex = 1000;
