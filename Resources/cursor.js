@@ -6,10 +6,12 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-const mobileAndTabletCheck = function () {
-  const ua = navigator.userAgent || navigator.vendor || window.opera;
-  return /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|ipad|playbook|silk|iphone|ipod/i.test(ua);
-};
+function hasCursor() {
+  return (
+    window.matchMedia("(hover: hover)").matches &&
+    window.matchMedia("(pointer: fine)").matches
+  );
+}
 
 const cursorCircleElement = document.getElementById("cursorCircle");
 
@@ -82,7 +84,8 @@ document.addEventListener("mouseover", (e) => {
     "restoName",
     "restaurant-card",
     "reservation-preview",
-    "reservation-dot-more"
+    "reservation-dot-more",
+    "profile-pic-wrapper1"
   ];
 
   for (let element = e.target; element; element = element.parentElement) {
@@ -154,8 +157,8 @@ function cursorCircle(tick) {
   requestAnimationFrame(cursorCircle);
 }
 
-if (!mobileAndTabletCheck()) {
-  cursorCircle();
+if (hasCursor() && cursorCircleElement) {
+  requestAnimationFrame(cursorCircle);
 } else {
   cursorCircleElement?.remove();
 }
