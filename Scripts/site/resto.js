@@ -524,16 +524,18 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  window.stopQrScan = function() {
-      if (!qrScanner) return;
-      qrScanner.stop()
-          .then(() => {
-              qrScanner.clear();
-              qrScanner = null;
-              scanningActive = false;
-          })
-          .catch(err => console.error("QR Stop Error:", err));
-  }
+  window.stopQrScan = function () {
+    if (!window.qrScanner) return;
+
+    window.qrScanner
+      .stop()
+      .then(() => {
+        window.qrScanner.clear();
+        window.qrScanner = null;
+        window.scanningActive = false;
+      })
+      .catch(err => console.error("QR Stop Error:", err));
+  };
 
   function openQrScanner() {
       qrModal.classList.add("visible");

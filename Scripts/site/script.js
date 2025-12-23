@@ -539,8 +539,9 @@ document.addEventListener('DOMContentLoaded', () => {
         qrModal.classList.remove("visible");
         qrBackdrop.classList.remove("visible");
         qrModal.style.transform = "translate(-50%, 100%)";
-        if (qrscanner) {
-            stopQrScan();
+        
+        if (typeof window.stopQrScan === "function") {
+            window.stopQrScan();
         }
         
         setTimeout(() => {
