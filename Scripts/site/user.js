@@ -663,9 +663,6 @@ function closeRedeemModalWithFX() {
   modalManager.close([qrModal, qrBackdrop]);
 }
 
-// Clicking background closes
-qrBackdrop.addEventListener("click", closeRedeemModal);
-
 function listenUserProfile() {
   auth.onAuthStateChanged(async user => {
     if (!user) return window.location.href = "index.html";

@@ -603,6 +603,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // Buttons
   scannerBtn.addEventListener("click", openQrScanner);
-  qrBackdrop.addEventListener("click", closeQrScanner);
-
 });
