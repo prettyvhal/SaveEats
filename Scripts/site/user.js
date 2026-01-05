@@ -14,7 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-document.addEventListener("DOMContentLoaded", () => {
+/*document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("notif-modal2");
   const yesBtn = document.getElementById("yesBtn");
   const noBtn = document.getElementById("noBtn");
@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.classList.remove("visible");
   });
 });
+*/
 
 window.addEventListener("load", loadRestaurants);
 const qrModal = document.getElementById("qrSlideModal");
@@ -791,6 +792,13 @@ function listenUserProfile() {
       const customPhoto = data.profileImage;
       const providerPhoto = user.photoURL;
 
+      // Check if 'agreedToTerms' field is missing or false
+      if (!data.agreedToTerms) {
+        termsModal.classList.add("visible");
+      } else {
+        termsModal.classList.remove("visible");
+      }
+
       if (customPhoto) {
         profileImg.src = customPhoto;
       } else if (providerPhoto) {
@@ -798,6 +806,20 @@ function listenUserProfile() {
       } else {
         profileImg.src = "Resources/assets/profile.jpg";
       }
+
+      // Handle Agreement Click
+      agreeBtn.addEventListener("click", async () => {
+        try {
+          await updateDoc(userRef, {
+            agreedToTerms: true,
+            termsAgreedAt: new Date()
+          });
+          showNotif("Thank you for agreeing to our terms!");
+        } catch (err) {
+          console.error("Error updating terms:", err);
+          showError("Failed to save agreement. Please try again.");
+        }
+      });
     });
   });
 }
