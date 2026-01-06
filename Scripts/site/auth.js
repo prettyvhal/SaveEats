@@ -26,10 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
       page === "" ||
       page === "index.html" ||
       page === "sign-up.html" ||
-      page === "sign-up-resto.html" ||
       page === "index" ||
-      page === "sign-up" ||
-      page === "sign-up-resto"
+      page === "sign-up"
     );
   };
 

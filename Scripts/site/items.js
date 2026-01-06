@@ -27,6 +27,7 @@ let itemsArray = [];
 
 let sortField = "name";
 let sortOrder = "asc";
+let isInitialLoad = true;
 
 document.addEventListener("DOMContentLoaded", () => {
   itemsGrid = document.getElementById("itemsGrid");
@@ -237,7 +238,15 @@ function createItemElement(id, item, index) {
 
   onSnapshot(q, async (snap) => {
     previewContainer.innerHTML = "";
-    const docs = snap.docs.slice(0, 5);
+
+    // Sort docs chronologically 
+    const sortedDocs = [...snap.docs].sort((a, b) => {
+      const timeA = a.data().reservedAt?.toDate ? a.data().reservedAt.toDate().getTime() : 0;
+      const timeB = b.data().reservedAt?.toDate ? b.data().reservedAt.toDate().getTime() : 0;
+       return timeB - timeA; 
+    });
+
+    const docs = sortedDocs.slice(0, 5);
 
     for (const docSnap of docs) {
       const reservation = docSnap.data();
@@ -272,37 +281,30 @@ function createItemElement(id, item, index) {
       openReservationModal(id);
     };
 
-    // ---- NOTIFICATION LOGIC ----
-    let isInitialLoad = true;
-    onSnapshot(q, async (snap) => {
-
-      if (isInitialLoad) {
-        isInitialLoad = false;
-        return; // ignore existing reservations
-      }
-
+    if (isInitialLoad) {
+      isInitialLoad = false; // Set to false after the very first data pull
+    } else {
+      // Only check docChanges after the initial load
       for (const change of snap.docChanges()) {
-        if (change.type !== "added") continue;
+        if (change.type === "added") {
+          const reservation = change.doc.data();
+          
+          // Fetch user data for the notification
+          const userSnap = await getDoc(doc(db, "users", reservation.userId));
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          const username = userData.username || "Someone";
+          const itemName = item.name || "an item";
 
-        const reservation = change.doc.data();
-
-        // fetch user
-        const userSnap = await getDoc(doc(db, "users", reservation.userId));
-        const userData = userSnap.exists() ? userSnap.data() : {};
-
-        const username = userData.username || "Someone";
-        const itemName = item.name || "an item";
-        console.log(`${username} reserved ${itemName}`)
-
-        if (Notification.permission === "granted") {
-          window.sendNotification("New Reservation 🥕", {
-            body: `${username} reserved ${itemName}`,
-            icon: "Resources/assets/icon1.png",
-            data: { url: "resto-dashboard.html" }
-          });
+          if (Notification.permission === "granted") {
+            window.sendNotification("New Reservation 🥕", {
+              body: `${username} reserved ${itemName}`,
+              icon: "Resources/assets/icon1.png",
+              data: { url: "resto-dashboard.html" }
+            });
+          }
         }
       }
-    });
+    }
   });
   return div;
 }
@@ -325,8 +327,13 @@ async function openReservationModal(itemId) {
       modalContent.innerHTML = "<p style='text-align:center; padding:20px;'>No reservations yet.</p>";
       return;
     }
+    const sortedDocs = [...snap.docs].sort((a, b) => {
+      const timeA = a.data().reservedAt?.toDate ? a.data().reservedAt.toDate().getTime() : 0;
+      const timeB = b.data().reservedAt?.toDate ? b.data().reservedAt.toDate().getTime() : 0;
+      return timeB - timeA; 
+    });
 
-    for (const docSnap of snap.docs) {
+    for (const docSnap of sortedDocs) {
       const reservation = docSnap.data();
 
       // Fetch user data
@@ -351,7 +358,7 @@ async function openReservationModal(itemId) {
         <div class="reserved-user-info">
           <span>${userData.username || "User"}</span>
           <small>${userData.email || "No email"}</small>
-          <div class="reserved-time">Reserved At: ${reservation.reservedAt?.toDate ? reservation.reservedAt.toDate().toLocaleString() : new Date(reservation.reservedAt).toLocaleString()}</div>
+          <div class="reserved-time"> <i class="fa-regular fa-clock"></i> Reserved At: ${reservation.reservedAt?.toDate ? reservation.reservedAt.toDate().toLocaleString() : new Date(reservation.reservedAt).toLocaleString()}</div>
         </div>
       `;
 
@@ -651,3 +658,102 @@ function startGlobalAvailabilityBackgroundSync(intervalMs = 60_000) {
     intervalMs
   );
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const itemPreview = document.getElementById("itemPreviewImage");
+  const zoomModal = document.getElementById("imageZoomModal");
+  const zoomedImg = document.getElementById("zoomedImage");
+  const closeZoom = zoomModal.querySelector(".zoom-close");
+  const zoomWrapper = document.querySelector('.zoom-wrapper');
+
+  let isDragging = false;
+  let hasMoved = false; // New flag to track if a drag occurred
+  let startX, startY;
+  let translateX = 0, translateY = 0;
+
+  const resetImage = () => {
+    translateX = 0;
+    translateY = 0;
+    const isZoomed = zoomedImg.classList.contains("is-zoomed");
+    // Apply scale(1) with 0 translation when zooming out
+    zoomedImg.style.transform = isZoomed ? "scale(2) translate(0px, 0px)" : "scale(1) translate(0px, 0px)";
+  };
+
+  const hideZoom = () => {
+    zoomModal.classList.remove("visible");
+    zoomedImg.classList.remove("is-zoomed");
+    resetImage();
+    if (window.modalManager) window.modalManager.close([zoomModal]);
+  };
+
+  const startDrag = (e) => {
+    if (!zoomedImg.classList.contains("is-zoomed")) return;
+    
+    isDragging = true;
+    hasMoved = false; // Reset movement flag
+    zoomedImg.style.transition = "none"; 
+    
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+    startX = clientX - translateX;
+    startY = clientY - translateY;
+  };
+
+  const doDrag = (e) => {
+    if (!isDragging) return;
+    
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+    const currentX = clientX - startX;
+    const currentY = clientY - startY;
+
+    // Check if movement is significant enough to be a drag
+    if (Math.abs(currentX - translateX) > 2 || Math.abs(currentY - translateY) > 2) {
+      hasMoved = true;
+    }
+
+    translateX = currentX;
+    translateY = currentY;
+
+    zoomedImg.style.transform = `scale(2) translate(${translateX / 2}px, ${translateY / 2}px)`;
+  };
+
+  const stopDrag = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    zoomedImg.style.transition = "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+  };
+
+  // Click handler updated to use the 'hasMoved' flag
+  zoomedImg.addEventListener("click", (e) => {
+    // If we dragged, don't toggle the zoom
+    if (hasMoved) return;
+
+    zoomedImg.classList.toggle("is-zoomed");
+    resetImage(); // This now clears translates correctly
+  });
+
+  itemPreview.addEventListener("click", () => {
+    zoomedImg.src = itemPreview.src;
+    zoomModal.classList.add("visible");
+    resetImage();
+    if (window.modalManager) window.modalManager.open([zoomModal]);
+  });
+
+  zoomedImg.addEventListener("mousedown", startDrag);
+  window.addEventListener("mousemove", doDrag);
+  window.addEventListener("mouseup", stopDrag);
+
+  zoomedImg.addEventListener("touchstart", startDrag, { passive: false });
+  window.addEventListener("touchmove", doDrag, { passive: false });
+  window.addEventListener("touchend", stopDrag);
+
+  closeZoom.addEventListener("click", hideZoom);
+  zoomModal.addEventListener("click", (e) => {
+    if (e.target === zoomModal || e.target === zoomWrapper) {
+      hideZoom();
+    }
+  });
+});

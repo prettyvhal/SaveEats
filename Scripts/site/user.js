@@ -14,7 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-/*document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("notif-modal2");
   const yesBtn = document.getElementById("yesBtn");
   const noBtn = document.getElementById("noBtn");
@@ -64,7 +64,7 @@ import {
     modal.classList.remove("visible");
   });
 });
-*/
+
 
 window.addEventListener("load", loadRestaurants);
 const qrModal = document.getElementById("qrSlideModal");
@@ -416,7 +416,14 @@ function renderItems() {
 
     onSnapshot(q, async (snap) => {
       previewContainer.innerHTML = "";
-      const docs = snap.docs.slice(0, 5);
+      // Sort docs chronologically
+      const sortedDocs = [...snap.docs].sort((a, b) => {
+        const timeA = a.data().reservedAt?.toDate ? a.data().reservedAt.toDate().getTime() : 0;
+        const timeB = b.data().reservedAt?.toDate ? b.data().reservedAt.toDate().getTime() : 0;
+        return timeB - timeA; 
+      });
+
+      const docs = sortedDocs.slice(0, 5);
 
       for (const docSnap of docs) {
         const reservation = docSnap.data();
@@ -960,6 +967,44 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const bgContainer = document.querySelector(".bg-container1");
+  const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
+  
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  const switchTabByIndex = (index) => {
+    if (index >= 0 && index < tabButtons.length) {
+      tabButtons[index].click(); 
+    }
+  };
+
+  bgContainer.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  bgContainer.addEventListener("touchend", (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  }, { passive: true });
+
+  const handleSwipe = () => {
+    const swipeThreshold = 80;
+    const currentActiveIndex = tabButtons.findIndex(btn => btn.classList.contains("active"));
+
+    // Swipe Left (User moves finger Right to Left -> Show Next Tab)
+    if (touchStartX - touchEndX > swipeThreshold) {
+      switchTabByIndex(currentActiveIndex + 1);
+    }
+    
+    // Swipe Right (User moves finger Left to Right -> Show Previous Tab)
+    if (touchEndX - touchStartX > swipeThreshold) {
+      switchTabByIndex(currentActiveIndex - 1);
+    }
+  };
+});
+
 auth.onAuthStateChanged(user => {
   if (user) {
     // Show reserved items for the logged-in user
@@ -1198,4 +1243,103 @@ document.getElementById("reserveItemBtn").addEventListener("click", async () => 
     console.error(err);
     showError("Failed to reserve item: " + err.message);
   }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const itemPreview = document.getElementById("itemPreviewImage");
+  const zoomModal = document.getElementById("imageZoomModal");
+  const zoomedImg = document.getElementById("zoomedImage");
+  const closeZoom = zoomModal.querySelector(".zoom-close");
+  const zoomWrapper = document.querySelector('.zoom-wrapper');
+
+  let isDragging = false;
+  let hasMoved = false; // New flag to track if a drag occurred
+  let startX, startY;
+  let translateX = 0, translateY = 0;
+
+  const resetImage = () => {
+    translateX = 0;
+    translateY = 0;
+    const isZoomed = zoomedImg.classList.contains("is-zoomed");
+    // Apply scale(1) with 0 translation when zooming out
+    zoomedImg.style.transform = isZoomed ? "scale(2) translate(0px, 0px)" : "scale(1) translate(0px, 0px)";
+  };
+
+  const hideZoom = () => {
+    zoomModal.classList.remove("visible");
+    zoomedImg.classList.remove("is-zoomed");
+    resetImage();
+    if (window.modalManager) window.modalManager.close([zoomModal]);
+  };
+
+  const startDrag = (e) => {
+    if (!zoomedImg.classList.contains("is-zoomed")) return;
+    
+    isDragging = true;
+    hasMoved = false; // Reset movement flag
+    zoomedImg.style.transition = "none"; 
+    
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+    startX = clientX - translateX;
+    startY = clientY - translateY;
+  };
+
+  const doDrag = (e) => {
+    if (!isDragging) return;
+    
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+    const currentX = clientX - startX;
+    const currentY = clientY - startY;
+
+    // Check if movement is significant enough to be a drag
+    if (Math.abs(currentX - translateX) > 2 || Math.abs(currentY - translateY) > 2) {
+      hasMoved = true;
+    }
+
+    translateX = currentX;
+    translateY = currentY;
+
+    zoomedImg.style.transform = `scale(2) translate(${translateX / 2}px, ${translateY / 2}px)`;
+  };
+
+  const stopDrag = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    zoomedImg.style.transition = "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+  };
+
+  // Click handler updated to use the 'hasMoved' flag
+  zoomedImg.addEventListener("click", (e) => {
+    // If we dragged, don't toggle the zoom
+    if (hasMoved) return;
+
+    zoomedImg.classList.toggle("is-zoomed");
+    resetImage(); // This now clears translates correctly
+  });
+
+  itemPreview.addEventListener("click", () => {
+    zoomedImg.src = itemPreview.src;
+    zoomModal.classList.add("visible");
+    resetImage();
+    if (window.modalManager) window.modalManager.open([zoomModal]);
+  });
+
+  zoomedImg.addEventListener("mousedown", startDrag);
+  window.addEventListener("mousemove", doDrag);
+  window.addEventListener("mouseup", stopDrag);
+
+  zoomedImg.addEventListener("touchstart", startDrag, { passive: false });
+  window.addEventListener("touchmove", doDrag, { passive: false });
+  window.addEventListener("touchend", stopDrag);
+
+  closeZoom.addEventListener("click", hideZoom);
+  zoomModal.addEventListener("click", (e) => {
+    if (e.target === zoomModal || e.target === zoomWrapper) {
+      hideZoom();
+    }
+  });
 });
