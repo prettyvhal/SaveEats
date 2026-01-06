@@ -694,7 +694,6 @@ body {
   flex-direction: column;
   cursor: auto;
   container-type: inline-size;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* About */
@@ -3888,8 +3887,8 @@ html {
   }
 
   .modal-content {
-    max-height: 70vh;
-    -webkit-overflow-scrolling: touch;
+    max-height: 75vh;
+    
   }
 
   .restaurant-grid {
