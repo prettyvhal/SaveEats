@@ -13,58 +13,115 @@ import {
   deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
-document.addEventListener("DOMContentLoaded", () => {
+function checkSecondaryPermissions() {
   const modal = document.getElementById("notif-modal2");
   const yesBtn = document.getElementById("yesBtn");
   const noBtn = document.getElementById("noBtn");
   const closeBtn = modal.querySelector(".close-btn");
   const message = modal.querySelector(".notif-message");
 
-  // Customize message
-  message.textContent = "Enable notifications to receive updates from SaveEats 🥕";
+  message.textContent = "Enable notifications and motion effects for the best SaveEats experience 🥕";
 
   if (
     'Notification' in window &&
     Notification.permission === 'default' &&
     !localStorage.getItem('notifChoice')
   ) {
-    modalManager.open([modal]);
-  }
+    window.modalManager.open(modal);
 
-  // YES → Ask permission
-  yesBtn.addEventListener("click", async () => {
-    modalManager.close([modal]);
+    yesBtn.onclick = async () => {
+      window.modalManager.close();
 
-    const granted = await window.requestNotificationPermission();
-
-    localStorage.setItem('notifChoice', 'asked');
-
-    if (granted) {
-      window.sendNotification(
-        'Welcome to SaveEats! 🥕',
-        {
-          body: 'You will now receive notifications from SaveEats.',
-          icon: 'Resources/assets/icon1.png',
-          data: { url: 'home-user.html' }
+      // 2. Handle Motion Permission (Critical for Shake SFX)
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        try {
+          const permissionState = await DeviceMotionEvent.requestPermission();
+          if (permissionState === 'granted') {
+            console.log("Motion sensors enabled");
+            // Initialize your shake detection if it's not already running
+            if (typeof initShakeDetection === 'function') initShakeDetection();
+          }
+        } catch (error) {
+          console.error("Motion permission request failed:", error);
         }
-      );
+      } else {
+        // Non-iOS devices usually don't require explicit permission
+        if (typeof initShakeDetection === 'function') initShakeDetection();
+      }
+
+      // 3. Handle Notification Permission
+      const granted = await window.requestNotificationPermission();
+      localStorage.setItem('notifChoice', 'asked');
+
+      if (granted) {
+          if (typeof window.sendNotification === 'function') {
+              window.sendNotification('Welcome! 🥕', {
+                  body: 'Notifications and motion effects enabled.',
+                  icon: 'Resources/assets/icon1.png',
+                  badge: 'Resources/assets/icon1.png', 
+                  vibrate: [100, 50, 100], 
+                  data: {
+                      url: 'home-user.html' 
+                  }
+              });
+          }
+      }
+    };
+
+    noBtn.onclick = () => {
+      localStorage.setItem('notifChoice', 'declined');
+      window.modalManager.close();
+    };
+
+    closeBtn.onclick = () => {
+      localStorage.setItem('notifChoice', 'dismissed');
+      window.modalManager.close();
+    };
+  }
+}
+
+let shakeAudio = null;
+let shakeStopTimer = null;
+
+function playShakeSound() {
+    if (shakeAudio && !shakeAudio.paused) {
+        resetShakeStopTimer(); // Keep playing as long as shaking continues
+        return;
     }
-  });
 
-  // NO → Remember choice, don’t ask again
-  noBtn.addEventListener("click", () => {
-    localStorage.setItem('notifChoice', 'declined');
-    modalManager.close([modal]);
-  });
+    // 2. Initialize and play sound
+    shakeAudio = new Audio("Resources/assets/shaker.mp3");
+    shakeAudio.loop = true; // Loop so it doesn't end while shaking
+    
+    if (typeof safeVibrate === 'function') safeVibrate([100, 50, 100]);
+    shakeAudio.play().catch(e => console.warn("Shake SFX blocked:", e.message));
+    resetShakeStopTimer();
+}
 
-  // Close (same as No)
-  closeBtn.addEventListener("click", () => {
-    localStorage.setItem('notifChoice', 'dismissed');
-    modalManager.close([modal]);
-  });
-});
+function resetShakeStopTimer() {
+    if (shakeStopTimer) clearTimeout(shakeStopTimer);
+    shakeStopTimer = setTimeout(() => {
+        if (shakeAudio) {
+            shakeAudio.pause();
+            shakeAudio.currentTime = 0;
+        }
+    }, 300); 
+}
 
+function initShakeDetection() {
+    const shakeThreshold = 20;
+
+    window.addEventListener('devicemotion', (event) => {
+        const acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        const totalMovement = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+
+        if (totalMovement > shakeThreshold) {
+            playShakeSound();
+        }
+    });
+}
 
 window.addEventListener("load", loadRestaurants);
 const qrModal = document.getElementById("qrSlideModal");
@@ -783,6 +840,7 @@ function listenUserProfile() {
 
     const profileImg = document.getElementById("profileImageHome");
     const userRef = doc(db, "users", user.uid);
+    checkSecondaryPermissions();
 
     // Real-time listener
     onSnapshot(userRef, snap => {
@@ -800,6 +858,7 @@ function listenUserProfile() {
         modalManager.open([termsModal]);
       } else {
         modalManager.close([termsModal]);
+        checkSecondaryPermissions();
       }
 
       if (customPhoto) {
@@ -817,7 +876,14 @@ function listenUserProfile() {
             agreedToTerms: true,
             termsAgreedAt: new Date()
           });
-          showNotif("Thank you for agreeing to our terms!");
+          modalManager.close([termsModal]);
+          setTimeout(() => {
+            showNotif("Thank you for agreeing to our terms!");
+          }, 100);
+
+          setTimeout(() => {
+            checkSecondaryPermissions();
+          }, 400);
         } catch (err) {
           console.error("Error updating terms:", err);
           showError("Failed to save agreement. Please try again.");
