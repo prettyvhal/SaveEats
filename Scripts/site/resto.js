@@ -23,12 +23,12 @@ document.addEventListener("DOMContentLoaded", () => {
     Notification.permission === 'default' &&
     !localStorage.getItem('notifChoice')
   ) {
-    modal.classList.add("visible");
+    modalManager.open([modal]);
   }
 
   // YES → Ask permission
   yesBtn.addEventListener("click", async () => {
-    modal.classList.remove("visible");
+    modalManager.close([modal]);
 
     const granted = await window.requestNotificationPermission();
 
@@ -49,13 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // NO → Remember choice, don’t ask again
   noBtn.addEventListener("click", () => {
     localStorage.setItem('notifChoice', 'declined');
-    modal.classList.remove("visible");
+    modalManager.close([modal]);
   });
 
   // Close (same as No)
   closeBtn.addEventListener("click", () => {
     localStorage.setItem('notifChoice', 'dismissed');
-    modal.classList.remove("visible");
+    modalManager.close([modal]);
   });
 });
 
@@ -107,7 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
   editProfileBtn.addEventListener("click", () => {
       safeVibrate([50, 150, 50])
       loadCurrentProfile();
-      profileModal.classList.add("visible");
       modalManager.open([profileModal]);
   });
 
@@ -115,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
   editBannerBtn.addEventListener("click", () => {
       safeVibrate([50, 150, 50])
       loadCurrentBanner();
-      bannerModal.classList.add("visible");
       modalManager.open([bannerModal]);
       
   });
@@ -137,11 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const isVisible = addItemModal.classList.contains("visible");
     if (isVisible) {
       // Close modal
-      addItemModal.classList.remove("visible");
+      modalManager.close([addItemModal]);
       animateToggleIcon();
     } else {
       // Open modal
-      addItemModal.classList.add("visible");
+      modalManager.open([addItemModal]);
       animateToggleIcon();
     }
   });
@@ -227,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       addItemForm.reset();
-      addItemModal.classList.remove("visible");
+      modalManager.close([addItemModal]);
       showNotif("Item added successfully!");
 
     } catch (err) {
@@ -381,8 +379,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update main profile icon
       if (updateData.profileBase64) profileImg.src = updateData.profileBase64;
 
-      profileModal.classList.remove("visible");
-      showNotif("Profile updated successfully!");
+      modalManager.close([profileModal]);
+      setTimeout(() => {
+        showNotif("Profile updated successfully!");
+      }, 300);
     } catch (err) {
       console.error(err);
       showError("Failed to save profile: " + err.message);
@@ -428,14 +428,16 @@ document.addEventListener("DOMContentLoaded", () => {
   saveBannerBtn.addEventListener("click", async () => {
     const user = auth.currentUser;
     if (!user) return alert("Not logged in");
-    if (!selectedBannerImage.src) return alert("No image selected");
+    if (!selectedBannerImage.src) return showError("No image selected");
 
     const base64 = bannerCanvas.toDataURL("image/jpeg", resolution);
     try {
       await updateDoc(doc(db, "users", user.uid), { bannerBase64: base64 });
       bannerImg.src = base64;
-      bannerModal.classList.remove("visible");
-      showNotif("Banner image updated!");
+      modalManager.close([bannerModal]);
+      setTimeout(() => {
+        showNotif("Banner image updated!");
+      }, 300);
     } catch (err) {
       showError("Update failed: " + err.message);
     }
@@ -596,18 +598,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openQrScanner() {
-      qrModal.classList.add("visible");
-      qrBackdrop.classList.add("visible");
-
       modalManager.open([qrModal, qrBackdrop]);
 
       setTimeout(startQrScan, 300);
   }
 
   function closeQrScanner() {
-      stopQrScan();
-      qrModal.classList.remove("visible");
-      qrBackdrop.classList.remove("visible");
+      stopQrScan()
 
       modalManager.close([qrModal, qrBackdrop]);
   }

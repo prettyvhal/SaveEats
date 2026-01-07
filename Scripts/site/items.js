@@ -28,6 +28,8 @@ let itemsArray = [];
 let sortField = "name";
 let sortOrder = "asc";
 let isInitialLoad = true;
+let availabilitySyncTimer = null;
+
 
 document.addEventListener("DOMContentLoaded", () => {
   itemsGrid = document.getElementById("itemsGrid");
@@ -49,10 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   addItemBtn?.addEventListener("click", () => {
     clearItemForm();
-    itemsModal.classList.add("visible");
+    modalManager.open([itemsModal]);
   });
   closeModalBtn?.addEventListener("click", () => {
-    itemsModal.classList.remove("visible");
+    modalManager.close([itemsModal]);
     clearItemForm();
   });
 
@@ -94,13 +96,6 @@ auth.onAuthStateChanged(user => {
     stopGlobalAvailabilityBackgroundSync();
   }
 });
-
-function stopGlobalAvailabilityBackgroundSync() {
-  if (availabilitySyncTimer) {
-    clearInterval(availabilitySyncTimer);
-    availabilitySyncTimer = null;
-  }
-}
 
 auth.onAuthStateChanged(user => {
   if (!user) stopGlobalAvailabilityBackgroundSync();
@@ -280,39 +275,38 @@ function createItemElement(id, item, index) {
       e.stopPropagation();
       openReservationModal(id);
     };
+
+    // Push Notification for new reservations
+    if (isInitialLoad) {
+      isInitialLoad = false;
+      return; 
+    }
+
+    for (const change of snap.docChanges()) {
+        if (change.type === "added") {
+            const reservation = change.doc.data();
+
+            // Fetch user data
+            const userSnap = await getDoc(doc(db, "users", reservation.userId));
+            const userData = userSnap.exists() ? userSnap.data() : {};
+            const username = userData.username || "Someone";
+            const itemName = item?.name || "an item";
+
+            // Check permission and send via service worker
+            if (Notification.permission === "granted") {
+                // Use the global function from your script.js
+                window.sendNotification("New Reservation 🥕", {
+                    body: `${username} reserved this item: ${itemName}`,
+                    icon: "Resources/assets/icon1.png",
+                    data: { url: "resto-dashboard.html" }
+                });
+            }
+        }
+    }
   });
   return div;
 }
 
-// Push Notification for new reservations
-onSnapshot(q, async (snap) => {
-  if (isInitialLoad) {
-      isInitialLoad = false;
-      return; 
-  }
-
-  for (const change of snap.docChanges()) {
-      if (change.type === "added") {
-          const reservation = change.doc.data();
-
-          // Fetch user data
-          const userSnap = await getDoc(doc(db, "users", reservation.userId));
-          const userData = userSnap.exists() ? userSnap.data() : {};
-          const username = userData.username || "Someone";
-          const itemName = item?.name || "an item";
-
-          // Check permission and send via service worker
-          if (Notification.permission === "granted") {
-              // Use the global function from your script.js
-              window.sendNotification("New Reservation 🥕", {
-                  body: `${username} reserved this item: ${itemName}`,
-                  icon: "Resources/assets/icon1.png",
-                  data: { url: "resto-dashboard.html" }
-              });
-          }
-      }
-  }
-});
 
 async function openReservationModal(itemId) {
   const modal = document.getElementById("reserved-modal");
@@ -371,7 +365,7 @@ async function openReservationModal(itemId) {
     }
   });
   // Show modal
-  modal.classList.add("visible");
+  modalManager.open([modal]);
 }
 
 // -------------------------------
@@ -430,7 +424,6 @@ window.editItem = async function(id) {
     const item = docSnap.data();
     currentEditId = id;
 
-    itemsModal.classList.add("visible");
     modalManager.open([itemsModal]);
     document.querySelector(".window-title").textContent = "Edit Item";
 
@@ -577,7 +570,7 @@ async function saveItem(e) {
     }
 
     clearItemForm();
-    itemsModal.classList.remove("visible");
+    modalManager.close([itemsModal]);
   } catch (err) {
     showError("Failed to save item: " + err.message);
   }
@@ -601,9 +594,6 @@ function clearItemForm() {
   currentEditId = null;
   document.querySelector(".window-title").textContent = "Adding new Item";
 }
-
-let availabilitySyncTimer = null;
-
 async function runGlobalAvailabilitySync() {
   const user = auth.currentUser;
   if (!user) return;
@@ -653,12 +643,9 @@ async function runGlobalAvailabilitySync() {
 }
 
 function startGlobalAvailabilityBackgroundSync(intervalMs = 60_000) {
-  if (availabilitySyncTimer) return; // prevent duplicates
-
-  // RUN IMMEDIATELY
+  if (availabilitySyncTimer) return; 
   runGlobalAvailabilitySync();
 
-  // THEN RUN ON INTERVAL
   availabilitySyncTimer = setInterval(
     runGlobalAvailabilitySync,
     intervalMs
@@ -695,7 +682,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   itemPreview.addEventListener("click", () => {
     zoomedImg.src = itemPreview.src;
-    zoomModal.classList.add("visible");
     modalManager.open([zoomModal]);
     
     zoomedImg.classList.remove("is-zoomed"); 

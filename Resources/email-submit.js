@@ -63,11 +63,4 @@ document.addEventListener("DOMContentLoaded", () => {
     errorModal.classList.add("visible");
     safeVibrate([50, 150, 50]);
   }
-
-  // Optional: close modal when clicking outside
-  window.addEventListener("click", (e) => {
-    if (e.target === submitModal || e.target === errorModal || e.target === notifModal) {
-      e.target.classList.remove("visible");
-    }
-  });
 });

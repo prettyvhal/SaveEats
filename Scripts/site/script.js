@@ -148,8 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const parentModal = button.closest('.modal-container');
             if (!parentModal) return;
 
-            parentModal.classList.remove('visible');
-            modalManager.close([parentModal]);
+            //parentModal.classList.remove('visible');
+            //modalManager.close([parentModal]);
+            window.modalManager.close(); 
 
             safeVibrate([30]);
             toggleModalBtn.style.display = 'none';

@@ -29,12 +29,12 @@ document.addEventListener("DOMContentLoaded", () => {
     Notification.permission === 'default' &&
     !localStorage.getItem('notifChoice')
   ) {
-    modal.classList.add("visible");
+    modalManager.open([modal]);
   }
 
   // YES → Ask permission
   yesBtn.addEventListener("click", async () => {
-    modal.classList.remove("visible");
+    modalManager.close([modal]);
 
     const granted = await window.requestNotificationPermission();
 
@@ -55,13 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // NO → Remember choice, don’t ask again
   noBtn.addEventListener("click", () => {
     localStorage.setItem('notifChoice', 'declined');
-    modal.classList.remove("visible");
+    modalManager.close([modal]);
   });
 
   // Close (same as No)
   closeBtn.addEventListener("click", () => {
     localStorage.setItem('notifChoice', 'dismissed');
-    modal.classList.remove("visible");
+    modalManager.close([modal]);
   });
 });
 
@@ -251,7 +251,6 @@ async function openRestaurant(name, restoId, logo, banner) {
   modal.dataset.hueShift = restoData.hueShift || 0;
 
   // Show modal
-  modal.classList.add("visible");
   modalManager.open([modal]);
 
   document.querySelector(".window-title1").textContent = name;
@@ -492,7 +491,6 @@ function openUserItemModal(item) {
         });
 
     // Show modal
-    modal.classList.add("visible");
     modalManager.open([modal]);
 }
 function updateOpenItemModal(item) {
@@ -571,8 +569,6 @@ async function openRedeemModal(itemId) {
     // -----------------------------
     // Otherwise → OPEN QR MODAL
     // -----------------------------
-    qrModal.classList.add("visible");
-    qrBackdrop.classList.add("visible");
     listenRedeemedItems(itemId);
     modalManager.open([qrModal, qrBackdrop]);
     safeVibrate([40]);
@@ -601,8 +597,6 @@ async function openReserveModal(reservationId, itemId) {
     }
 
     // If reservation is valid → open modal
-    qrModal.classList.add("visible");
-    qrBackdrop.classList.add("visible");
     modalManager.open([qrModal, qrBackdrop]);
     safeVibrate([40]);
 
@@ -803,9 +797,9 @@ function listenUserProfile() {
 
       // Check if 'agreedToTerms' field is missing or false
       if (!data.agreedToTerms) {
-        termsModal.classList.add("visible");
+        modalManager.open([termsModal]);
       } else {
-        termsModal.classList.remove("visible");
+        modalManager.close([termsModal]);
       }
 
       if (customPhoto) {
@@ -841,11 +835,11 @@ const profileCloseBtn = profileImgModal.querySelector(".close-btn");
 profileHomeImg.addEventListener("click", () => {
     safeVibrate([50, 150, 50])
     loadCurrentProfile();
-    profileImgModal.classList.add("visible");
+    modalManager.open([profileImgModal]);
 });
 
 profileCloseBtn.addEventListener("click", () => {
-    profileImgModal.classList.remove("visible");
+    modalManager.close([profileImgModal]);
 });
 
 const profileInput = document.getElementById("profileSelectInput");
@@ -895,8 +889,10 @@ document.getElementById("saveProfileImage").addEventListener("click", async () =
     updateData.profileImage = cropCanvas.toDataURL("image/jpeg", 0.9);
 
     await updateDoc(doc(db, "users", user.uid), updateData);
-    profileImgModal.classList.remove("visible");
-    showNotif("Profile updated");
+    modalManager.close([profileImgModal]);
+    setTimeout(() => {
+      showNotif("Profile updated");
+    }, 300);
   } catch (err) {
     console.error(err);
     showError("Failed to save profile: " + err.message);
@@ -1237,10 +1233,11 @@ document.getElementById("reserveItemBtn").addEventListener("click", async () => 
       redeemed: false
     });
 
-    showNotif(`Item "${itemData.name}" reserved successfully!`);
     const modal = document.getElementById("Items-modal");
-    modal.classList.remove("visible");
     modalManager.close([modal]);
+    setTimeout(() => {
+      showNotif(`Item "${itemData.name}" reserved successfully!`);
+    }, 300);
   } catch (err) {
     console.error(err);
     showError("Failed to reserve item: " + err.message);
@@ -1277,7 +1274,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   itemPreview.addEventListener("click", () => {
     zoomedImg.src = itemPreview.src;
-    zoomModal.classList.add("visible");
     modalManager.open([zoomModal]);
     
     zoomedImg.classList.remove("is-zoomed"); 
