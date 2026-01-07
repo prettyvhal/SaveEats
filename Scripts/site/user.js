@@ -40,8 +40,15 @@ function checkSecondaryPermissions() {
       // 2. Handle Motion Permission
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
           try {
-              await DeviceMotionEvent.requestPermission();
-          } catch (e) { console.warn(e); }
+              const response = await DeviceMotionEvent.requestPermission();
+              if (response === 'granted') {
+                  initShakeDetection(); // Now it's safe to start listening
+              }
+          } catch (e) {
+              console.error("Motion Permission Error:", e);
+          }
+      } else {
+          initShakeDetection();
       }
 
       // 3. Now perform the cleanup tasks
@@ -56,8 +63,6 @@ function checkSecondaryPermissions() {
                   data: { url: 'home-user.html' }
               });
           }
-          // Initialize sensors if granted
-          if (typeof initShakeDetection === 'function') initShakeDetection(); 
       }
     };
 
