@@ -840,7 +840,6 @@ function listenUserProfile() {
 
     const profileImg = document.getElementById("profileImageHome");
     const userRef = doc(db, "users", user.uid);
-    checkSecondaryPermissions();
 
     // Real-time listener
     onSnapshot(userRef, snap => {
