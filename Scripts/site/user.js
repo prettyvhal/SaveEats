@@ -739,6 +739,8 @@ function closeRedeemModal() {
 }
 
 function closeRedeemModalWithFX() {
+    const fw = new Audio("Resources/assets/fireworks.mp3");
+    playSound(fw);
     confetti({
         particleCount: 180,
         angle: 60,
@@ -1251,23 +1253,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const zoomedImg = document.getElementById("zoomedImage");
   const closeZoom = zoomModal.querySelector(".zoom-close");
   const zoomWrapper = document.querySelector('.zoom-wrapper');
+  const zoomInstructions = document.getElementById("zoomInstructions");
 
   let isDragging = false;
-  let hasMoved = false; // New flag to track if a drag occurred
+  let hasMoved = false;
   let startX, startY;
   let translateX = 0, translateY = 0;
 
   const resetImage = () => {
     translateX = 0;
     translateY = 0;
+    hasMoved = false;
     const isZoomed = zoomedImg.classList.contains("is-zoomed");
-    // Apply scale(1) with 0 translation when zooming out
+    
+    if (isZoomed) {
+      zoomInstructions.classList.add("hidden");
+    } else {
+      zoomInstructions.classList.remove("hidden");
+    }
+
     zoomedImg.style.transform = isZoomed ? "scale(2) translate(0px, 0px)" : "scale(1) translate(0px, 0px)";
   };
+
+  itemPreview.addEventListener("click", () => {
+    zoomedImg.src = itemPreview.src;
+    zoomModal.classList.add("visible");
+    modalManager.open([zoomModal]);
+    
+    zoomedImg.classList.remove("is-zoomed"); 
+    zoomInstructions.classList.remove("hidden");
+    
+    resetImage(); 
+    if (window.modalManager) window.modalManager.open([zoomModal]);
+  });
 
   const hideZoom = () => {
     zoomModal.classList.remove("visible");
     zoomedImg.classList.remove("is-zoomed");
+    modalManager.close([zoomModal, zoomWrapper]);
     resetImage();
     if (window.modalManager) window.modalManager.close([zoomModal]);
   };
@@ -1319,13 +1342,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     zoomedImg.classList.toggle("is-zoomed");
     resetImage(); // This now clears translates correctly
-  });
-
-  itemPreview.addEventListener("click", () => {
-    zoomedImg.src = itemPreview.src;
-    zoomModal.classList.add("visible");
-    resetImage();
-    if (window.modalManager) window.modalManager.open([zoomModal]);
   });
 
   zoomedImg.addEventListener("mousedown", startDrag);

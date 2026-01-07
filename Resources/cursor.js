@@ -85,7 +85,8 @@ document.addEventListener("mouseover", (e) => {
     "restaurant-card",
     "reservation-preview",
     "reservation-dot-more",
-    "profile-pic-wrapper1"
+    "profile-pic-wrapper1",
+    "item-preview-img"
   ];
 
   for (let element = e.target; element; element = element.parentElement) {

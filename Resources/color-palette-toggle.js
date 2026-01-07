@@ -299,33 +299,38 @@ function applyTheme(name) {
 }
 
 function applyHueShiftTheme(deg) {
-    const base = themes.base; // baseline palette
+    document.documentElement.style.setProperty("--hue-shift-deg", `${deg}deg`);
+    
+    // Only update the core variables that really need distinct values
+    const base = themes.base;
+    
+    // Use requestAnimationFrame to sync with the screen's refresh rate
+    requestAnimationFrame(() => {
+        for (let key in base) {
+            const shifted = hueShiftColor(base[key], deg);
+            document.documentElement.style.setProperty(key, shifted);
+        }
+    });
 
-    for (let key in base) {
-        const shifted = hueShiftColor(base[key], deg);
-        document.documentElement.style.setProperty(key, shifted);
-    }
-
-    // Save hue value and update slider + cookies
-    document.documentElement.style.setProperty("--hue-value", deg);
-
-    localStorage.setItem("savedHue", deg);
     document.cookie = `hueShift=${deg}; path=/; max-age=31536000`;
-
-    // Sync slider if visible
     if (hueSlider) hueSlider.value = deg;
 }
+
+let dbUpdateTimeout;
 
 hueSlider.addEventListener("input", (e) => {
     const hue = parseInt(e.target.value);
 
-    // Force theme into hue-shift mode
     document.cookie = `theme=hue-shift; path=/; max-age=31536000`;
-
     applyHueShiftTheme(hue);
-    saveThemeToFirestore("hue-shift", hue);
-});
 
+    // Debounced Firestore Update (Wait 500ms after last move)
+    clearTimeout(dbUpdateTimeout);
+    dbUpdateTimeout = setTimeout(() => {
+        saveThemeToFirestore("hue-shift", hue);
+        saveUserTheme("hue-shift", hue);
+    }, 500); 
+});
 
 /* Convert hex → HSL → shift Hue → back to hex */
 function shiftHue(deg) {

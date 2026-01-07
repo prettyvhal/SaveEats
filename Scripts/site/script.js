@@ -113,19 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Modal Closing and Reset ---
     closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const parentModalContainer = button.closest('.modal-container');
-            if (window.innerWidth > 600) {
-                button.addEventListener('click', () => {
-                    if (parentModalContainer) {
-                        parentModalContainer.classList.remove('visible');
-                        modalManager.close([parentModalContainer]);
-                    }
-                    toggleModalBtn.style.display = 'none';
-                    activeModal = null;
-                });
-            }
-
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Route through manager only
+            window.modalManager.close(); 
+            
+            // Hide the floating toggle button
+            toggleModalBtn.style.display = 'none';
+            activeModal = null;
         });
     });
 
@@ -475,52 +470,44 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // GLOBAL MODAL BACK-BUTTON MANAGER
     window.modalManager = {
-        stack: [],          // each entry is an array of elements
-        historyLocked: false, // true if we already pushed a history entry
+        stack: [],
 
         open(elements) {
             if (!Array.isArray(elements)) elements = [elements];
-            // Show elements
             elements.forEach(el => el.classList.add("visible"));
-            // Add to stack
             this.stack.push(elements);
-            // Lock history only if not locked yet
-            if (!this.historyLocked) {
-                history.pushState({ modalOpen: true }, "");
-                this.historyLocked = true;
+            // Push a state so the back button has a target
+            history.pushState({ modalLevel: this.stack.length }, "");
+        },
+
+        // All manual buttons (X, Back arrows) should call this
+        close() {
+            if (this.stack.length > 0) {
+                history.back(); // Triggers 'popstate'
             }
         },
 
-        close(elements) {
-            if (!Array.isArray(elements)) elements = [elements];
-            elements.forEach(el => el.classList.remove("visible"));
-            // Remove from stack
-            this.stack = this.stack.filter(group => group !== elements);
-            // If nothing left, unlock history
-            if (this.stack.length === 0) {
-                this.historyLocked = false;
-            }
-        },
-
-        closeTop() {
+        handlePop() {
             if (this.stack.length === 0) return;
+            
             const topGroup = this.stack.pop();
-            topGroup.forEach(el => el.classList.remove("visible"));
-            safeVibrate([40]);
- 
-            // If nothing left, unlock history
-            if (this.stack.length === 0) {
-                this.historyLocked = false;
+            if (topGroup) {
+                topGroup.forEach(el => el.classList.remove("visible"));
+                
+                // UI Reset for Zoomed Image specifically
+                const zoomedImg = document.getElementById("zoomedImage");
+                if (zoomedImg && topGroup.some(el => el.contains(zoomedImg) || el === zoomedImg)) {
+                    zoomedImg.classList.remove("is-zoomed");
+                    if (typeof window.resetImage === "function") window.resetImage(); 
+                }
             }
+            if (typeof safeVibrate === "function") safeVibrate([40]);
         }
     };
 
-    // Intercept back button
-    window.addEventListener("popstate", (e) => {
-        // Only handle if stack is not empty
-        if (window.modalManager.stack.length > 0) {
-            window.modalManager.closeTop();
-        }
+    // Unified listener
+    window.addEventListener("popstate", () => {
+        window.modalManager.handlePop();
     });
 
     let startY = 0;

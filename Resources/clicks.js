@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [role="radio"], [role="switch"], 
         [tabindex]:not([tabindex="-1"]),
         [onclick], [contenteditable="true"],
-        .profile-img1, .profile-img`;
+        .profile-img1, .profile-img, .item-preview-img`;
 
     // Unlock on first user input
     document.body.addEventListener('click', initAudio, {
