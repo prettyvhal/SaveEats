@@ -20,6 +20,21 @@ body {
   -webkit-touch-callout: none;
 }
 
+input, 
+textarea, 
+select {
+  user-select: all !important;
+  -webkit-user-select: all !important;
+  -moz-user-select: all !important;
+  -ms-user-select: all !important;
+  pointer-events: auto !important;
+}
+
+label {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 img {
   -webkit-user-drag: none; 
   -khtml-user-drag: none;
@@ -1595,6 +1610,29 @@ html {
 }
 
 .submit-btn:active {
+  transform: var(--clicky);
+}
+
+.help-btn {
+  background: var(--orange);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: small;
+  padding: 3px 8px;
+  margin: 3px;
+  border-radius: var(--radius-inner);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  transition: all 0.2s ease-in-out;
+}
+
+.help-btn:hover {
+  background: var(--orangeD);
+  transform: translateY(-3px);
+}
+
+.help-btn:active {
   transform: var(--clicky);
 }
 

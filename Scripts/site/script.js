@@ -472,42 +472,48 @@ document.addEventListener('DOMContentLoaded', () => {
     // GLOBAL MODAL BACK-BUTTON MANAGER
     window.modalManager = {
         stack: [],
+        // Cache common elements to avoid repeat DOM queries
+        zoomedImg: null,
 
         open(elements) {
             if (!Array.isArray(elements)) elements = [elements];
-            elements.forEach(el => el.classList.add("visible"));
+            requestAnimationFrame(() => {
+                elements.forEach(el => el.classList.add("visible"));
+            });
+
             this.stack.push(elements);
-            // Push a state so the back button has a target
             history.pushState({ modalLevel: this.stack.length }, "");
         },
 
-        // All manual buttons (X, Back arrows) should call this
         close() {
             if (this.stack.length > 0) {
-                history.back(); // Triggers 'popstate'
+                history.back();
             }
         },
 
         handlePop() {
-            if (this.stack.length === 0) return;
-            
             const topGroup = this.stack.pop();
-            if (topGroup) {
+            if (!topGroup) return;
+
+            // Efficiently manage the reset of specific UI states
+            requestAnimationFrame(() => {
                 topGroup.forEach(el => el.classList.remove("visible"));
                 
-                // UI Reset for Zoomed Image specifically
-                const zoomedImg = document.getElementById("zoomedImage");
-                if (zoomedImg && topGroup.some(el => el.contains(zoomedImg) || el === zoomedImg)) {
-                    zoomedImg.classList.remove("is-zoomed");
-                    if (typeof window.resetImage === "function") window.resetImage(); 
+                // Check for zoomed image reset using cached reference if possible
+                this.zoomedImg = this.zoomedImg || document.getElementById("zoomedImage");
+                
+                if (this.zoomedImg && topGroup.some(el => el.contains(this.zoomedImg) || el === this.zoomedImg)) {
+                    this.zoomedImg.classList.remove("is-zoomed");
+                    if (typeof window.resetImage === "function") window.resetImage();
                 }
-            }
+            });
+
+            // Trigger vibration immediately as it's not tied to layout
             if (typeof safeVibrate === "function") safeVibrate([40]);
         }
     };
 
-    // Unified listener
-    window.addEventListener("popstate", () => {
+    window.addEventListener("popstate", (event) => {
         window.modalManager.handlePop();
     });
 

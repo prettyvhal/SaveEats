@@ -17,7 +17,7 @@ import {
 let itemsGrid;
 let addItemBtn, itemsModal, closeModalBtn;
 let itemImageInput, itemPreviewImage;
-let itemName, itemDescription, itemOriginalPrice, itemDiscountedPrice, itemQuantity, itemExpiry;
+let itemName, itemDescription, itemOriginalPrice, itemDiscountedPrice, itemQuantity, itemExpiry, itemMinSellingPrice;
 let saveItemBtn;
 
 let selectedItemImage = new Image();
@@ -32,6 +32,7 @@ let availabilitySyncTimer = null;
 
 
 document.addEventListener("DOMContentLoaded", () => {
+  setupTooltips();
   itemsGrid = document.getElementById("itemsGrid");
   addItemBtn = document.getElementById("addItemBtn");
   itemsModal = document.getElementById("Items-modal");
@@ -44,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   itemDescription = document.getElementById("itemDescription");
   itemOriginalPrice = document.getElementById("itemOriginalPrice");
   itemDiscountedPrice = document.getElementById("itemDiscountedPrice");
+  itemMinSellingPrice = document.getElementById("itemMinSellingPrice");
   itemQuantity = document.getElementById("itemQuantity");
   itemExpiry = document.getElementById("itemExpiry");
 
@@ -54,7 +56,9 @@ document.addEventListener("DOMContentLoaded", () => {
     modalManager.open([itemsModal]);
   });
   closeModalBtn?.addEventListener("click", () => {
+    setTimeout(() => {
     modalManager.close([itemsModal]);
+    }, 50);
     clearItemForm();
   });
 
@@ -425,6 +429,7 @@ window.editItem = async function(id) {
     currentEditId = id;
 
     modalManager.open([itemsModal]);
+    //itemsModal.classList.add("visible");
     document.querySelector(".window-title").textContent = "Edit Item";
 
     const now = new Date();
@@ -460,6 +465,7 @@ window.editItem = async function(id) {
     itemDescription.value = item.description || "";
     itemOriginalPrice.value = item.originalPrice;
     itemDiscountedPrice.value = item.discountedPrice;
+    itemMinSellingPrice.value = item.minSellingPrice || "0";
     itemQuantity.value = item.quantity;
 
     itemPreviewImage.src = item.imageBase64 || "Resources/assets/food.png";
@@ -491,6 +497,7 @@ async function saveItem(e) {
   const description = itemDescription.value.trim();
   const originalPrice = Number(itemOriginalPrice.value);
   const discountedPrice = Number(itemDiscountedPrice.value);
+  const minSellingPrice = Number(itemMinSellingPrice.value);
   const quantity = Number(itemQuantity.value);
 
   // Handle expiryTime
@@ -515,7 +522,7 @@ async function saveItem(e) {
   }
 
   // Basic validation
-  if (!name || !selectedItemImage.src || !originalPrice || !discountedPrice || !quantity) {
+  if (!name || !selectedItemImage.src || !originalPrice || !discountedPrice || !quantity || ! minSellingPrice)  {
     isSaving = false;
     return alert("Please fill all required fields");
   }
@@ -544,6 +551,7 @@ async function saveItem(e) {
         description,
         originalPrice,
         discountedPrice,
+        minSellingPrice,
         quantity,
         expiryTime: expiryTime || null, // cleared => null
         available,
@@ -560,6 +568,7 @@ async function saveItem(e) {
         description,
         originalPrice,
         discountedPrice,
+        minSellingPrice,
         quantity,
         expiryTime: expiryTime || null,
         available,
@@ -578,6 +587,24 @@ async function saveItem(e) {
   }
 
   isSaving = false;
+}
+
+function setupTooltips() {
+  const tooltips = {
+    "orig-help": "The initial full price of the item before any surplus discount.",
+    "disc-help": "The current price customers will pay for this surplus item. Note that the system may adjust this price automatically over time based on expiry and stock levels.",
+    "min-help": "The lowest price you are willing to accept for this item during automated clearances."
+  };
+
+  Object.keys(tooltips).forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        showNotif(tooltips[id]);
+      });
+    }
+  });
 }
 
 // -------------------------------
@@ -613,31 +640,62 @@ async function runGlobalAvailabilitySync() {
       const item = docSnap.data();
       if (!item.expiryTime) return;
 
-      // Normalize expiry time
-      const expiryMs =
-        typeof item.expiryTime.toDate === "function"
+      const expiryMs = typeof item.expiryTime.toDate === "function"
           ? item.expiryTime.toDate().getTime()
           : new Date(item.expiryTime).getTime();
+          
+      const createdAtMs = item.createdAt?.toDate 
+          ? item.createdAt.toDate().getTime() 
+          : now - (24 * 60 * 60 * 1000); // Default to 24h ago if missing
 
-      // Old items without `available` → treated as available
       const isAvailable = item.available !== false;
 
-      /*
-        ONE-WAY STATE CHANGE
-        Expired + still available → mark unavailable ONCE
-      */
+      // 1. HANDLE EXPIRATION (One-way state change)
       if (expiryMs <= now && isAvailable) {
         batch.update(docSnap.ref, {
           available: false,
           availabilityUpdatedAt: new Date()
         });
         updated++;
+        return; // Skip pricing for expired items
+      }
+
+      // 2. DYNAMIC PRICING LOGIC (Only for available items)
+      if (isAvailable && item.minSellingPrice !== undefined) {
+        const maxPrice = parseFloat(item.originalPrice);
+        const minPrice = parseFloat(item.minSellingPrice);
+        
+        // Calculate Time Factor (Percentage of life remaining)
+        const totalLife = expiryMs - createdAtMs;
+        const timeLeft = expiryMs - now;
+        const timeRatio = Math.max(0, Math.min(1, timeLeft / totalLife)); // 1.0 (new) to 0.0 (expired)
+
+        // Calculate Quantity Factor (Scarcity)
+        // If only 1-2 items left, price stays higher. If 10+ left, price drops faster.
+        const qty = parseInt(item.quantity) || 0;
+        const qtyFactor = qty <= 2 ? 0.2 : 0; // Scarcity buffer
+
+        // Formula: Price = Min + (Range * (TimeRatio + Scarcity))
+        let targetPrice = minPrice + (maxPrice - minPrice) * (timeRatio + qtyFactor);
+        
+        // Clamp the price between min and max
+        targetPrice = Math.max(minPrice, Math.min(maxPrice, targetPrice));
+        targetPrice = Math.round(targetPrice); // Clean integers for currency
+
+        // Only update if the price has actually changed to save Firestore writes
+        if (Math.round(item.discountedPrice) !== targetPrice) {
+          batch.update(docSnap.ref, {
+            discountedPrice: targetPrice, // Updated directly here
+            priceUpdatedAt: new Date()
+          });
+          updated++;
+        }
       }
     });
 
     if (updated > 0) {
       await batch.commit();
-      console.log(`✔ Global sync: ${updated} expired items flagged`);
+      console.log(`✔ Global sync: ${updated} items updated (Availability/Price)`);
     }
   } catch (err) {
     console.error("Global availability sync failed:", err.code || err.message);
