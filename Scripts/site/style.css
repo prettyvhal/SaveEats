@@ -2810,6 +2810,35 @@ html {
   color: var(--orange);
 }
 
+.auth-extras {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 5px;
+  padding-right: 5px;
+  margin-top: -5px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--orangeD);
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+}
+
+.link-btn:hover {
+  color: var(--orange);
+  transform: var(--clicky);
+}
+
+.link-btn.action-btn {
+  position: relative;
+  min-width: 100px;
+}
+
 .resto-owner-badge {
   position: absolute;
   top: 15px;

@@ -8,7 +8,8 @@ import {
   signInWithRedirect,
   OAuthProvider,
   getRedirectResult,
-  fetchSignInMethodsForEmail
+  fetchSignInMethodsForEmail,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc,
@@ -339,4 +340,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  /* ---------------- FORGOT PASSWORD ---------------- */
+window.handleForgotPassword = async function(btn) {
+    const email = document.getElementById("login-email").value.trim();
+    if (!email) return showError("Please enter your email first.");
+
+    const originalText = btn.innerHTML; 
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+    const spinner = btn.querySelector('.btn-spinner');
+    if(spinner) spinner.style.display = 'inline-block';
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        showNotif("Reset link sent! Please check your inbox.");
+    } catch (err) {
+        showError(err);
+        let msg = "Failed to send reset email.";
+        if (err.code === "auth/user-not-found") msg = "No account found with this email.";
+        if (err.code === "auth/invalid-email") msg = "Invalid email format.";
+        if (err.code === "auth/too-many-requests") msg = "Too many requests. Try again later.";
+        
+        showError(msg);
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        if(spinner) spinner.style.display = 'none';
+    }
+  };
 });
