@@ -381,49 +381,55 @@
 
             <!-- ITEM NAME -->
             <div class="form-grid3">
-              <label>Item Name</label>
+              <div class="form-text1">Item Name</div>
               <input type="text" id="itemName" required>
             </div>
 
             <!-- DESCRIPTION -->
             <div class="form-grid3">
-              <label>Description</label>
+              <div class="form-text1">Description</div>
               <textarea id="itemDescription" rows="8"></textarea>
             </div>
 
             <!-- ORIGINAL PRICE -->
             <div class="form-grid3">
-              <label>Original Price (₱) <button type="button" id="orig-help" class="help-btn">?</button></label>
+              <div class="form-text1">Price of the Item (₱)
+                <button type="button" id="orig-help" class="help-btn">?</button></label>
+              </div>
               <input type="number" id="itemOriginalPrice" required>
             </div>
 
-            <!-- DISCOUNTED PRICE -->
+            <!-- DISCOUNTED PRICE
             <div class="form-grid3">
               <label>Discounted Price (₱) <button type="button" id="disc-help" class="help-btn">?</button></label>
               <input type="number" id="itemDiscountedPrice" required>
-            </div>
+            </div>  -->
 
             <!-- MINIMUM SELLING PRICE -->
             <div class="form-grid3">
-              <label>Minimum Selling Price (₱) <button type="button" id="min-help" class="help-btn">?</button></label>
+              <div class="form-text1">Minimum Selling Price (₱)
+                <button type="button" id="min-help" class="help-btn">?</button></label>
+              </div>
               <input type="number" id="itemMinSellingPrice" required>
             </div>
 
             <!-- ITEM QUANTITY -->
             <div class="form-grid3">
-              <label>Item Quantity</label>
+              <div class="form-text1">Item Quantity</div>
               <input type="number" id="itemQuantity" required>
             </div>
 
             <!-- EXPIRATION TIME -->
             <div class="form-grid3">
-              <label>When the Promo Expires</label>
+              <div class="form-text1">When the Promo Expires</div>
               <input type="datetime-local" id="itemExpiry" required>
             </div>
 
             <!-- BUTTON -->
-            <div class="form-grid">
-              <button type="submit" class="submit-btn" id="saveItemBtn">Save Item</button>
+            <div class="bg-container">
+              <div class="form-grid">
+                <button type="submit" class="submit-btn" id="saveItemBtn">Save Item</button>
+              </div>
             </div>
 
           </form>

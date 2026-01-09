@@ -504,7 +504,7 @@ window.editItem = async function(id) {
     itemName.value = item.name;
     itemDescription.value = item.description || "";
     itemOriginalPrice.value = item.originalPrice;
-    itemDiscountedPrice.value = item.discountedPrice;
+    //itemDiscountedPrice.value = item.discountedPrice || "1";
     itemMinSellingPrice.value = item.minSellingPrice || "0";
     itemQuantity.value = item.quantity;
 
@@ -591,7 +591,7 @@ async function saveItem(e) {
   const name = itemName.value.trim();
   const description = itemDescription.value.trim();
   const originalPrice = Number(itemOriginalPrice.value);
-  const discountedPrice = Number(itemDiscountedPrice.value);
+  const discountedPrice = Number(1);
   const minSellingPrice = Number(itemMinSellingPrice.value);
   const quantity = Number(itemQuantity.value);
 
@@ -617,7 +617,7 @@ async function saveItem(e) {
   }
 
   // Basic validation
-  if (!name || !selectedItemImage.src || !originalPrice || !discountedPrice || !quantity || ! minSellingPrice)  {
+  if (!name || !selectedItemImage.src || !originalPrice || !quantity || ! minSellingPrice)  {
     isSaving = false;
     return showNotif("Please fill all required fields");
   }
@@ -674,14 +674,19 @@ async function saveItem(e) {
         showNotif("Item added successfully!");
       }, 50);
     }
-
     clearItemForm();
     modalManager.close([itemsModal]);
+
+    if (typeof runGlobalAvailabilitySync === "function") {
+      runGlobalAvailabilitySync();
+    }
+    
   } catch (err) {
     showError("Failed to save item: " + err.message);
+  } finally {
+    isSaving = false;
   }
 
-  isSaving = false;
 }
 
 function setupTooltips() {
@@ -711,7 +716,7 @@ function clearItemForm() {
   itemName.value = "";
   itemDescription.value = "";
   itemOriginalPrice.value = "";
-  itemDiscountedPrice.value = "";
+  //itemDiscountedPrice.value = "";
   itemMinSellingPrice.value = "";
   itemQuantity.value = "";
   itemExpiry.value = "";

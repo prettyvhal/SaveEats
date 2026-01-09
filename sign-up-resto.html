@@ -167,6 +167,7 @@
         <div class="login-frame">
             <div class="window-header">
                 <span class="window-title">Sign up to create your Resto account!</span>
+                <button class="submit-btn1" id="goToHome"><i class="fa-solid fa-arrow-left"></i></button>
             </div>
 
             <div class="window-content">
@@ -176,17 +177,19 @@
                 </div>
                 <div class="login-section">
                     <form id="RestoSignUpForm">
-                        <div class="form-grid1">
-                            <input type="username" id="restoname" placeholder="Restaurant name" required>
-                            <input type="email" id="resto-email" placeholder="Email address" required>
-                            
+                        <div class="form-grid">
+                            <div class="form-text">Resto Name</div>
+                            <input type="username" id="restoname" placeholder="Name of the store" required>
+                            <div class="form-text">Email</div>
+                            <input type="email" id="resto-email" placeholder="SaveEatsResto@email.com" required>
+                            <div class="form-text">Password</div>
                             <div class="password-wrapper">
-                              <input type="password" id="resto-password" placeholder="Password" required>
+                              <input type="password" id="resto-password" placeholder="Enter your password" required>
                               <span class="toggle-password">
                                 <i class="fa-solid fa-eye-slash"></i>
                               </span>
                             </div>
-
+                            <div class="form-text">Repeat Password</div>
                             <div class="password-wrapper">
                               <input type="password" id="resto-password_rep" placeholder="Repeat your Password" required>
                               <span class="toggle-password">

@@ -167,6 +167,7 @@
         <div class="login-frame">
             <div class="window-header">
                 <span class="window-title">Sign up to create your account!</span>
+                <button class="submit-btn1" id="goToHome"><i class="fa-solid fa-arrow-left"></i></button>
             </div>
 
             <div class="window-content">
@@ -176,24 +177,34 @@
                 </div>
                 <div class="login-section">
                     <form id="SignUpForm">
-                        <div class="form-grid1">
-                            <input type="username" id="signup-username" placeholder="Username" required>
-                            <input type="email" id="signup-email" placeholder="Email address" required>
-
-                            <div class="password-wrapper">
-                              <input type="password" id="signup-password" placeholder="Password" required>
-                              <span class="toggle-password">
-                                <i class="fa-solid fa-eye-slash"></i>
-                              </span>
-                            </div>
-
-                            <div class="password-wrapper">
-                              <input type="password" id="password-rep" placeholder="Repeat your Password" required>
-                              <span class="toggle-password">
-                                <i class="fa-solid fa-eye-slash"></i>
-                              </span>
-                            </div>
+                        <div class="form-grid3">
+                            <div class="form-text">Username</div>
+                            <input type="username" id="signup-username" placeholder="Your name here" required>
+                            <div class="form-text">Email</div>
+                            <input type="email" id="signup-email" placeholder="SaveEats@email.com" required>
                         </div>
+                            <div class="form-grid1">
+                              <div class="form-grid2">
+                                <div class="form-text">Password</div>
+                                <div class="password-wrapper">
+                                  <input type="password" id="signup-password" placeholder="Enter your password" required>
+                                  <span class="toggle-password">
+                                    <i class="fa-solid fa-eye-slash"></i>
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div class="form-grid2">
+                                <div class="form-text">Repeat Password</div>
+                                <div class="password-wrapper">
+                                  <input type="password" id="password-rep" placeholder="Repeat your Password" required>
+                                  <span class="toggle-password">
+                                    <i class="fa-solid fa-eye-slash"></i>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                        
 
                         <div class="form-grid">
                             <button type="submit" class="submit-btn">
@@ -230,23 +241,38 @@
             </div>
           </div>
           <div class="about-section">
-              <p>email: <a href="mailto:saveeats.mail@gmail.com" class="cad-name">saveeats.mail@gmail.com</a></p>
+              <p>Contact Help: <a href="mailto:saveeats.mail@gmail.com" class="cad-name">saveeats.mail@gmail.com</a></p>
               <form id="contact-form">
-                <div class="contact-grid">
+                <div class="form-grid3">
+                  <div class="form-text">Name of the Owner</div>
                   <input type="text" name="name" placeholder="Your name" required />
+
+                  <div class="form-text">Email</div>
                   <input type="email" name="email" placeholder="Your gmail account" required />
-                  <input type="text" name="subject" placeholder="Resto name" required />
+
+                  <div class="form-text">Resto/Shop Name</div>
+                  <input type="text" name="subject" placeholder="Name of your Resto" required />
+                  <div class="form-text">Location</div>
                   <input name="location" placeholder="Restaurant location" required>
                 </div>
 
                 <div class="contact-grid">
-                  <input name="socials" placeholder="Social media holders" required>
-                  <input name="number" placeholder="Phone numer">
-                  <textarea name="others" placeholder="Other information"></textarea>
+                  <div class="form-grid2">
+                    <div class="form-text">Social Media Accounts</div>
+                    <input name="socials" placeholder="Social media holders" required>
+                  </div>
+
+                  <div class="form-grid2">
+                    <div class="form-text">Contact Number</div>
+                    <input name="number" placeholder="09876543210">
+                  </div>
+
+                  <div class="form-text">Other Information</div>
+                  <textarea name="others" placeholder="Other information about your resto/shop/stand"></textarea>
                 </div>
               </form>
               <div class="form-grid">
-                <button type="submit" id="email-submit-btn" class="submit-btn">Submit</button>
+                <button type="submit" id="email-submit-btn" class="submit-btn">Send Info to Validate</button>
               </div>
           </div>
         </div>

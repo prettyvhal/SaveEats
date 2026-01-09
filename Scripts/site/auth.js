@@ -352,7 +352,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if(spinner) spinner.style.display = 'inline-block';
 
     try {
-        showNotif("Reset link sent! Please check your inbox, including spam/junk folder.");
+        setTimeout(() => {
+          showNotif("Reset link sent! Please check your inbox, including spam/junk folder.");
+        }, 200);
         await sendPasswordResetEmail(auth, email);
     } catch (err) {
         console.error("Reset Error:", err);
@@ -368,5 +370,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if(spinner) spinner.style.display = 'none';
     }
   };
+
+  document.getElementById("goToHome")?.addEventListener("click", () => {
+        window.location.href = "index.html";
+  });
 
 });

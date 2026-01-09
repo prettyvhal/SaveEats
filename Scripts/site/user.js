@@ -350,7 +350,7 @@ async function loadRestaurantData(restoId) {
     const openedId = document.getElementById("Items-modal").dataset.itemId;
     if (openedId) {
       const updated = allItems.find(i => i.id === openedId);
-      if (updated) updateOpenItemModal(updated);
+      if (updated) window.updateOpenItemModal(updated);
     }
   });
 }
@@ -548,7 +548,7 @@ function openUserItemModal(item) {
     // Show modal
     modalManager.open([modal]);
 }
-function updateOpenItemModal(item) {
+window.updateOpenItemModal = async function(item) {
     let expireISO = "";
     if (item.expiryTime) {
         const d = item.expiryTime.toDate ? item.expiryTime.toDate() : new Date(item.expiryTime);
@@ -1191,6 +1191,28 @@ function listenReservedItems(userId) {
               <button class="redeem-btn">Redeem</button>
             </div>
           `;
+
+          div.onclick = (e) => {
+            if (e.target.closest('.item-actions')) return;
+
+            if (itemSnap.exists()) {
+              // Create the item object including its ID and Owner
+              const itemData = { 
+                ...itemSnap.data(), 
+                id: itemSnap.id,
+                ownerId: reservation.ownerId
+              };
+
+              // Call the global function
+              if (typeof window.updateOpenItemModal === "function") {
+                window.updateOpenItemModal(itemData);
+              } else {
+                console.error("Function updateOpenItemModal is not globally defined.");
+              }
+            } else {
+              showError("This item no longer exists in the shop.");
+            }
+          };
 
           if (item.ownerId) {
             const ownerRef = doc(db, "users", item.ownerId);
