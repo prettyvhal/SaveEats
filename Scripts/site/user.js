@@ -32,7 +32,8 @@ function checkSecondaryPermissions() {
     Notification.permission === 'default' &&
     !localStorage.getItem('notifChoice')
   ) {
-    window.modalManager.open(modal);
+    //window.modalManager.open(modal);
+    modal.classList.add("visible");
 
     yesBtn.onclick = async () => {
       const granted = await window.requestNotificationPermission();
@@ -53,7 +54,8 @@ function checkSecondaryPermissions() {
 
       // 3. Now perform the cleanup tasks
       localStorage.setItem('notifChoice', 'asked');
-      window.modalManager.close(); // Visual cleanup
+      //window.modalManager.close();
+      modal.classList.remove("visible");
 
       if (granted) {
           if (typeof window.sendNotification === 'function') {
@@ -68,12 +70,14 @@ function checkSecondaryPermissions() {
 
     noBtn.onclick = () => {
       localStorage.setItem('notifChoice', 'declined');
-      window.modalManager.close();
+      //window.modalManager.close();
+      modal.classList.remove("visible");
     };
 
     closeBtn.onclick = () => {
       localStorage.setItem('notifChoice', 'dismissed');
-      window.modalManager.close();
+      //window.modalManager.close();
+      modal.classList.remove("visible");
     };
   }
 }
@@ -306,7 +310,8 @@ async function openRestaurant(name, restoId, logo, banner) {
   modal.dataset.hueShift = restoData.hueShift || 0;
 
   // Show modal
-  modalManager.open([modal]);
+  //modalManager.open([modal]);
+  modal.classList.add("visible");
 
   document.querySelector(".window-title1").textContent = name;
   document.getElementById("restoName").textContent = name;
@@ -546,7 +551,8 @@ function openUserItemModal(item) {
         });
 
     // Show modal
-    modalManager.open([modal]);
+    //modalManager.open([modal]);
+    modal.classList.add("visible");
 }
 window.updateOpenItemModal = async function(item) {
     let expireISO = "";
@@ -625,7 +631,9 @@ async function openRedeemModal(itemId) {
     // Otherwise → OPEN QR MODAL
     // -----------------------------
     listenRedeemedItems(itemId);
-    modalManager.open([qrModal, qrBackdrop]);
+    //modalManager.open([qrModal, qrBackdrop]);
+    qrModal.classList.add("visible");
+    qrBackdrop.classList.add("visible");
     safeVibrate([40]);
 
   } catch (err) {
@@ -652,7 +660,9 @@ async function openReserveModal(reservationId, itemId) {
     }
 
     // If reservation is valid → open modal
-    modalManager.open([qrModal, qrBackdrop]);
+    //modalManager.open([qrModal, qrBackdrop]);
+    qrModal.classList.add("visible");
+    qrBackdrop.classList.add("visible");
     safeVibrate([40]);
 
     // Start the listener for real-time updates
@@ -784,7 +794,8 @@ function closeRedeemModal() {
   setTimeout(() => {
       qrBackdrop.classList.remove("visible");
   }, 300);
-  modalManager.close([qrModal, qrBackdrop]);
+  //modalManager.close([qrModal, qrBackdrop]);
+  qrBackdrop.classList.remove("visible");
 }
 
 function closeRedeemModalWithFX() {
@@ -828,7 +839,7 @@ function closeRedeemModalWithFX() {
       const modal1 = document.getElementById("Items-modal");
       modal1.classList.remove("visible");
   }, 400);
-  modalManager.close([qrModal, qrBackdrop]);
+  //modalManager.close([qrModal, qrBackdrop]);
 }
 
 function listenUserProfile() {
@@ -852,9 +863,11 @@ function listenUserProfile() {
 
       // Check if 'agreedToTerms' field is missing or false
       if (!data.agreedToTerms) {
-        modalManager.open([termsModal]);
+        //modalManager.open([termsModal]);
+        termsModal.classList.add("visible");
       } else {
-        modalManager.close([termsModal]);
+        //modalManager.close([termsModal]);
+        termsModal.classList.remove("visible");
         checkSecondaryPermissions();
       }
 
@@ -873,7 +886,8 @@ function listenUserProfile() {
             agreedToTerms: true,
             termsAgreedAt: new Date()
           });
-          modalManager.close([termsModal]);
+          //modalManager.close([termsModal]);
+          termsModal.classList.remove("visible");
           setTimeout(() => {
             showNotif("Thank you for agreeing to our terms!");
           }, 100);
@@ -898,11 +912,13 @@ const profileCloseBtn = profileImgModal.querySelector(".close-btn");
 profileHomeImg.addEventListener("click", () => {
     safeVibrate([50, 150, 50])
     loadCurrentProfile();
-    modalManager.open([profileImgModal]);
+    //modalManager.open([profileImgModal]);
+    profileImgModal.classList.add("visible");
 });
 
 profileCloseBtn.addEventListener("click", () => {
-    modalManager.close([profileImgModal]);
+    //modalManager.close([profileImgModal]);
+    profileImgModal.classList.remove("visible");
 });
 
 const profileInput = document.getElementById("profileSelectInput");
@@ -952,7 +968,8 @@ window.saveUserProfile = (async () => {
     updateData.profileImage = cropCanvas.toDataURL("image/jpeg", 0.9);
 
     await updateDoc(doc(db, "users", user.uid), updateData);
-    modalManager.close([profileImgModal]);
+    //modalManager.close([profileImgModal]);
+    profileImgModal.classList.remove("visible");
     setTimeout(() => {
       showNotif("Profile updated");
     }, 300);
@@ -1319,7 +1336,8 @@ window.reserveCurrentItem = (async () => {
     });
 
     const modal = document.getElementById("Items-modal");
-    modalManager.close([modal]);
+    //modalManager.close([modal]);
+    modal.classList.remove("visible");
     setTimeout(() => {
       showNotif(`Item "${itemData.name}" reserved successfully!`);
     }, 300);
@@ -1359,21 +1377,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   itemPreview.addEventListener("click", () => {
     zoomedImg.src = itemPreview.src;
-    modalManager.open([zoomModal]);
+    //modalManager.open([zoomModal]);
+    zoomModal.classList.add("visible");
     
     zoomedImg.classList.remove("is-zoomed"); 
     zoomInstructions.classList.remove("hidden");
     
     resetImage(); 
-    if (window.modalManager) window.modalManager.open([zoomModal]);
+    if (window.modalManager)
+      //window.modalManager.open([zoomModal]);
+      zoomModal.classList.add("visible");
   });
 
   const hideZoom = () => {
     zoomModal.classList.remove("visible");
     zoomedImg.classList.remove("is-zoomed");
-    modalManager.close([zoomModal, zoomWrapper]);
+    //modalManager.close([zoomModal, zoomWrapper]);
+    zoomModal.classList.remove("visible");
+    zoomWrapper.classList.remove("visible");
     resetImage();
-    if (window.modalManager) window.modalManager.close([zoomModal]);
+    if (window.modalManager)
+      //window.modalManager.close([zoomModal]);
+      zoomModal.classList.remove("visible");
   };
 
   const startDrag = (e) => {

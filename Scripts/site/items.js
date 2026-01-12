@@ -53,11 +53,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   addItemBtn?.addEventListener("click", () => {
     clearItemForm();
-    modalManager.open([itemsModal]);
+    //modalManager.open([itemsModal]);
+    itemsModal.classList.add("visible");
   });
   closeModalBtn?.addEventListener("click", () => {
     setTimeout(() => {
-    modalManager.close([itemsModal]);
+    //modalManager.close([itemsModal]);
+    itemsModal.classList.remove("visible");
     }, 50);
     clearItemForm();
   });
@@ -373,7 +375,8 @@ async function openReservationModal(itemId) {
     }
   });
   // Show modal
-  modalManager.open([modal]);
+  //modalManager.open([modal]);
+  modal.classList.add("visible");
 }
 
 // -------------------------------
@@ -468,8 +471,8 @@ window.editItem = async function(id) {
     const item = docSnap.data();
     currentEditId = id;
 
-    modalManager.open([itemsModal]);
-    //itemsModal.classList.add("visible");
+    //modalManager.open([itemsModal]);
+    itemsModal.classList.add("visible");
     document.querySelector(".window-title").textContent = "Edit Item";
 
     const now = new Date();
@@ -675,7 +678,8 @@ async function saveItem(e) {
       }, 50);
     }
     clearItemForm();
-    modalManager.close([itemsModal]);
+    //modalManager.close([itemsModal]);
+    itemsModal.classList.remove("visible");
 
     if (typeof runGlobalAvailabilitySync === "function") {
       runGlobalAvailabilitySync();
@@ -843,21 +847,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   itemPreview.addEventListener("click", () => {
     zoomedImg.src = itemPreview.src;
-    modalManager.open([zoomModal]);
+    //modalManager.open([zoomModal]);
+    zoomModal.classList.add("visible");
     
     zoomedImg.classList.remove("is-zoomed"); 
     zoomInstructions.classList.remove("hidden");
     
     resetImage(); 
-    if (window.modalManager) window.modalManager.open([zoomModal]);
+    if (window.modalManager) 
+      //window.modalManager.open([zoomModal]);
+      zoomModal.classList.add("visible");
   });
 
   const hideZoom = () => {
     zoomModal.classList.remove("visible");
     zoomedImg.classList.remove("is-zoomed");
-    modalManager.close([zoomModal, zoomWrapper]);
+    //modalManager.close([zoomModal, zoomWrapper]);
     resetImage();
-    if (window.modalManager) window.modalManager.close([zoomModal]);
+    if (window.modalManager) 
+      //window.modalManager.close([zoomModal]);
+      zoomModal.classList.remove("visible");
   };
 
   const startDrag = (e) => {

@@ -78,16 +78,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!errorModal) return;
     errorMessageBox.textContent = msg;
     safeVibrate([80, 150, 80, 150, 80]);
-    //errorModal.classList.add("visible");
-    window.modalManager.open(errorModal);
+    errorModal.classList.add("visible");
+    //window.modalManager.open(errorModal);
   };
 
   window.showNotif = (msg) => {
     if (!notifModal) return;
     notifMessageBox.textContent = msg;
     safeVibrate([80, 150, 80]);
-    //notifModal.classList.add("visible");
-    window.modalManager.open(notifModal);
+    notifModal.classList.add("visible");
+    //window.modalManager.open(notifModal);
   };
 
   // Optional: close modal when clicking outside

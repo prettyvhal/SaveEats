@@ -123,7 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             // Route through manager only
-            window.modalManager.close(); 
+            //window.modalManager.close(); 
+            const parentModal = button.closest('.modal-container');
+            parentModal.classList.remove('visible');
             
             // Hide the floating toggle button
             toggleModalBtn.style.display = 'none';
@@ -155,9 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const parentModal = button.closest('.modal-container');
             if (!parentModal) return;
 
-            //parentModal.classList.remove('visible');
+            parentModal.classList.remove('visible');
             //modalManager.close([parentModal]);
-            window.modalManager.close(); 
+            //window.modalManager.close(); 
 
             safeVibrate([30]);
             toggleModalBtn.style.display = 'none';
@@ -477,63 +479,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // GLOBAL MODAL BACK-BUTTON MANAGER
-    window.modalManager = {
+    /*window.modalManager = {
         stack: [],
         zoomedImg: null,
-        isProcessing: false, // Prevents "back-to-back" execution conflicts
 
         open(elements) {
-            if (!Array.isArray(elements)) elements = [elements];
+            // 1. Ensure elements is an array
+            const elementArray = Array.isArray(elements) ? elements : [elements];
             
-            // Push to stack first
-            this.stack.push(elements);
+            // 2. Push to local stack and update browser history
+            this.stack.push(elementArray);
             history.pushState({ modalLevel: this.stack.length }, "");
 
+            // 3. Visual Open with slight delay for CSS transition stability
             setTimeout(() => {
                 requestAnimationFrame(() => {
-                    elements.forEach(el => el.classList.add("visible"));
+                    elementArray.forEach(el => {
+                        if (el) el.classList.add("visible");
+                    });
                 });
-            }, 100);
+            }, 50);
         },
 
         close() {
-            // Only trigger back if there is something in the stack
-            if (this.stack.length > 0 && !this.isProcessing) {
+            // Simply trigger history back; let handlePop do the work
+            if (this.stack.length > 0) {
                 history.back();
             }
         },
 
         handlePop() {
-            if (this.isProcessing) return;
-            this.isProcessing = true;
-
+            // 1. Get the last opened group from the stack
             const topGroup = this.stack.pop();
-            if (!topGroup) {
-                this.isProcessing = false;
-                return;
-            }
+            if (!topGroup) return;
 
+            // 2. Visual Close with 50ms delay
             setTimeout(() => {
                 requestAnimationFrame(() => {
-                    topGroup.forEach(el => el.classList.remove("visible"));
+                    topGroup.forEach(el => {
+                        if (el) el.classList.remove("visible");
+                    });
                     
+                    // Handle Zoomed Image resets
                     this.zoomedImg = this.zoomedImg || document.getElementById("zoomedImage");
-                    if (this.zoomedImg && topGroup.some(el => el.contains(this.zoomedImg) || el === this.zoomedImg)) {
+                    if (this.zoomedImg && topGroup.some(el => el && (el.contains(this.zoomedImg) || el === this.zoomedImg))) {
                         this.zoomedImg.classList.remove("is-zoomed");
                         if (typeof window.resetImage === "function") window.resetImage();
                     }
-                    
-                    // Allow next close operation after animation starts
-                    this.isProcessing = false;
                 });
-            }, 100);
+            }, 50);
 
+            // 3. Haptics
             if (typeof safeVibrate === "function") safeVibrate([40]);
         }
     };
 
-    // Ensure you have an event listener to trigger handlePop
-    window.addEventListener('popstate', () => window.modalManager.handlePop());
+    // Listen for the back button / history.back()
+    window.addEventListener('popstate', () => window.modalManager.handlePop());*/
 
     let startY = 0;
     let currentY = 0;
@@ -584,7 +586,9 @@ document.addEventListener('DOMContentLoaded', () => {
             qrModal.style.transform = "";
         }, 250);
 
-        modalManager.close([qrModal, qrBackdrop]);
+        //modalManager.close([qrModal, qrBackdrop]);
+        qrModal.classList.remove("visible");
+        qrBackdrop.classList.remove("visible");
         safeVibrate?.([50]);
     } else {
         qrModal.style.transform = "translate(-50%, 0)";

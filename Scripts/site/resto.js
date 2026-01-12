@@ -23,12 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
     Notification.permission === 'default' &&
     !localStorage.getItem('notifChoice')
   ) {
-    modalManager.open([modal]);
+    //modalManager.open([modal]);
+    modal.classList.add("visible");
   }
 
   // YES → Ask permission
   yesBtn.addEventListener("click", async () => {
-    modalManager.close([modal]);
+    //modalManager.close([modal]);
+    modal.classList.remove("visible");
 
     const granted = await window.requestNotificationPermission();
 
@@ -49,13 +51,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // NO → Remember choice, don’t ask again
   noBtn.addEventListener("click", () => {
     localStorage.setItem('notifChoice', 'declined');
-    modalManager.close([modal]);
+    //modalManager.close([modal]);
+    modal.classList.remove("visible");
   });
 
   // Close (same as No)
   closeBtn.addEventListener("click", () => {
     localStorage.setItem('notifChoice', 'dismissed');
-    modalManager.close([modal]);
+    //modalManager.close([modal]);
+    modal.classList.remove("visible");
   });
 });
 
@@ -107,15 +111,16 @@ document.addEventListener("DOMContentLoaded", () => {
   editProfileBtn.addEventListener("click", () => {
       safeVibrate([50, 150, 50])
       loadCurrentProfile();
-      modalManager.open([profileModal]);
+      //modalManager.open([profileModal]);
+      profileModal.classList.add("visible");
   });
 
   // OPEN BANNER MODAL
   editBannerBtn.addEventListener("click", () => {
       safeVibrate([50, 150, 50])
       loadCurrentBanner();
-      modalManager.open([bannerModal]);
-      
+      //modalManager.open([bannerModal]);
+      bannerModal.classList.add("visible");
   });
 
   // ADD ITEM MODAL
@@ -135,11 +140,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const isVisible = addItemModal.classList.contains("visible");
     if (isVisible) {
       // Close modal
-      modalManager.close([addItemModal]);
+      //modalManager.close([addItemModal]);
+      addItemModal.classList.remove("visible");
       animateToggleIcon();
     } else {
       // Open modal
-      modalManager.open([addItemModal]);
+      //modalManager.open([addItemModal]);
+      addItemModal.classList.add("visible");
       animateToggleIcon();
     }
   });
@@ -225,7 +232,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       addItemForm.reset();
-      modalManager.close([addItemModal]);
+      //modalManager.close([addItemModal]);
+      addItemModal.classList.remove("visible");
       showNotif("Item added successfully!");
 
     } catch (err) {
@@ -379,7 +387,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update main profile icon
       if (updateData.profileBase64) profileImg.src = updateData.profileBase64;
 
-      modalManager.close([profileModal]);
+      //modalManager.close([profileModal]);
+      profileModal.classList.remove("visible");
       setTimeout(() => {
         showNotif("Profile updated successfully!");
       }, 300);
@@ -434,7 +443,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       await updateDoc(doc(db, "users", user.uid), { bannerBase64: base64 });
       bannerImg.src = base64;
-      modalManager.close([bannerModal]);
+      //modalManager.close([bannerModal]);
+      bannerModal.classList.remove("visible");
       setTimeout(() => {
         showNotif("Banner image updated!");
       }, 300);
@@ -598,15 +608,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openQrScanner() {
-      modalManager.open([qrModal, qrBackdrop]);
-
+      //modalManager.open([qrModal, qrBackdrop]);
+      qrModal.classList.add("visible");
+      qrBackdrop.classList.add("visible");
       setTimeout(startQrScan, 300);
   }
 
   function closeQrScanner() {
       stopQrScan()
 
-      modalManager.close([qrModal, qrBackdrop]);
+      //modalManager.close([qrModal, qrBackdrop]);
+      qrModal.classList.remove("visible");
+      qrBackdrop.classList.remove("visible");
   }
   // Buttons
   scannerBtn.addEventListener("click", openQrScanner);
