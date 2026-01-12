@@ -128,11 +128,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      // Optional: If on a protected page, send to login
       return;
     }
 
-    // Prevent redirect loops: only redirect if we are on index/signup
     if (!isAuthPage()) return;
 
     try {
@@ -275,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const email = document.getElementById("signup-email").value.trim();
       const password = document.getElementById("signup-password").value;
-      const rep = document.getElementById("password_rep").value;
+      const rep = document.getElementById("password-rep").value;
       const username = document.getElementById("signup-username").value.trim();
 
       if (password !== rep) return showError("Passwords do not match");
@@ -288,10 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         type: "user"
       });
 
-      localStorage.setItem(
-        "loggedInUserType",
-        snap.exists() ? snap.data().type : "user"
-      );
+    localStorage.setItem("loggedInUserType", "user");
       signUpForm.reset();
     } catch (err) {
       showError(err.message);
@@ -301,7 +296,8 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------------- RESTO SIGN UP ---------------- */
 
   restoBtn1?.addEventListener("click", () =>
-    modalManager.open([emailModal])
+    //modalManager.open([emailModal])
+    emailModal.classList.add("visible")
   );
 
   restoBtn?.addEventListener("click", async () => {
@@ -321,10 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
         type: "restaurant"
       });
 
-      localStorage.setItem(
-        "loggedInUserType",
-        snap.exists() ? snap.data().type : "restaurant"
-      );
+      localStorage.setItem("loggedInUserType", "restaurant");
       restoForm.reset();
     } catch (err) {
       showError(err.message);

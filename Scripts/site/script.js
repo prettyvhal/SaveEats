@@ -537,64 +537,55 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for the back button / history.back()
     window.addEventListener('popstate', () => window.modalManager.handlePop());*/
 
-    let startY = 0;
-    let currentY = 0;
-    let dragging = false;
+    if (qrModal && qrBackdrop) {
+        let startY = 0;
+        let currentY = 0;
+        let dragging = false;
 
-    qrModal.addEventListener("pointerdown", (e) => {
-    // only primary button / finger
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+        qrModal.addEventListener("pointerdown", (e) => {
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            startY = e.clientY;
+            dragging = true;
+            qrModal.setPointerCapture(e.pointerId);
+            qrModal.style.transition = "none";
+        });
 
-    startY = e.clientY;
-    dragging = true;
+        qrModal.addEventListener("pointermove", (e) => {
+            if (!dragging) return;
+            currentY = e.clientY;
+            const deltaY = Math.max(0, currentY - startY);
+            qrModal.style.transform = `translate(-50%, ${deltaY}px)`;
+        });
 
-    qrModal.setPointerCapture(e.pointerId);
-    qrModal.style.transition = "none";
-    });
+        qrModal.addEventListener("pointerup", finishDrag);
+        qrModal.addEventListener("pointercancel", finishDrag);
 
-    qrModal.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
+        function finishDrag(e) {
+            if (!dragging) return;
+            dragging = false;
+            qrModal.releasePointerCapture?.(e.pointerId);
+            qrModal.style.transition = "transform 0.25s ease";
 
-    currentY = e.clientY;
-    const deltaY = Math.max(0, currentY - startY);
+            const deltaY = Math.max(0, currentY - startY);
 
-    qrModal.style.transform = `translate(-50%, ${deltaY}px)`;
-    });
+            if (deltaY > 120) {
+                // Success: Close via Manager to keep history in sync
+                modalManager.close(); 
+                
+                if (typeof window.stopQrScan === "function") window.stopQrScan();
 
-    qrModal.addEventListener("pointerup", finishDrag);
-    qrModal.addEventListener("pointercancel", finishDrag);
-
-    function finishDrag(e) {
-    if (!dragging) return;
-
-    dragging = false;
-    qrModal.releasePointerCapture?.(e.pointerId);
-    qrModal.style.transition = "transform 0.25s ease";
-
-    const deltaY = Math.max(0, currentY - startY);
-
-    if (deltaY > 120) {
-        qrModal.classList.remove("visible");
-        qrBackdrop.classList.remove("visible");
-        qrModal.style.transform = "translate(-50%, 100%)";
-        
-        if (typeof window.stopQrScan === "function") {
-            window.stopQrScan();
+                qrModal.style.transform = "translate(-50%, 100%)";
+                setTimeout(() => {
+                    qrModal.style.transform = "";
+                }, 250);
+                
+                if (typeof safeVibrate === "function") safeVibrate([50]);
+            } else {
+                // Cancel: Snap back
+                qrModal.style.transform = "translate(-50%, 0)";
+            }
+            startY = currentY = 0;
         }
-        
-        setTimeout(() => {
-            qrModal.style.transform = "";
-        }, 250);
-
-        //modalManager.close([qrModal, qrBackdrop]);
-        qrModal.classList.remove("visible");
-        qrBackdrop.classList.remove("visible");
-        safeVibrate?.([50]);
-    } else {
-        qrModal.style.transform = "translate(-50%, 0)";
-    }
-
-    startY = currentY = 0;
     }
 
     // GLOBAL BUTTON ACTION SPINNER
