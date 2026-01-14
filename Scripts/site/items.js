@@ -78,6 +78,10 @@ document.addEventListener("DOMContentLoaded", () => {
   saveItemBtn?.addEventListener("click", saveItem);
 
   // Sorting controls
+  const searchInput = document.getElementById("itemSearch");
+  if (searchInput) {
+      searchInput.addEventListener("input", renderItemsGrid);
+  }
   const sortFieldSelect = document.getElementById("sortField");
   const sortOrderSelect = document.getElementById("sortOrder");
   sortFieldSelect?.addEventListener("change", () => {
@@ -129,13 +133,19 @@ function subscribeToItems(ownerId) {
 
 // Render grid with sorting
 function renderItemsGrid() {
+  const searchInput = document.getElementById("itemSearch");
+  const filterText = searchInput ? searchInput.value.toLowerCase() : "";
   itemsGrid.innerHTML = "";
   if (!itemsArray.length) {
     itemsGrid.innerHTML = "<p>No items added yet.</p>";
     return;
   }
 
-  const sorted = [...itemsArray].sort((a, b) => {
+  const filteredItems = itemsArray.filter(item => {
+    return item.name.toLowerCase().includes(filterText);
+  });
+
+  const sorted = [...filteredItems].sort((a, b) => {
     let valA = a[sortField];
     let valB = b[sortField];
 
@@ -150,6 +160,11 @@ function renderItemsGrid() {
     return sortOrder === "asc" ? (valA > valB ? 1 : valA < valB ? -1 : 0)
                                : (valA < valB ? 1 : valA > valB ? -1 : 0);
   });
+
+  if (sorted.length === 0) {
+    itemsGrid.innerHTML = `<div class="no-results">No items found matching "${filterText}"</div>`;
+    return;
+  }
 
   sorted.forEach((item, index) => {
     itemsGrid.appendChild(createItemElement(item.id, item, index));

@@ -361,15 +361,21 @@ async function loadRestaurantData(restoId) {
   });
 }
 
+
 // Render function stays the same
 function renderItems() {
   const itemsGrid = document.getElementById("itemsGrid");
-  itemsGrid.innerHTML = "";
-
   const sortField = document.getElementById("sortField").value;
   const sortOrder = document.getElementById("sortOrder").value;
+  const searchInput = document.getElementById("itemSearch");
+  const filterText = searchInput ? searchInput.value.toLowerCase() : "";
+  itemsGrid.innerHTML = "";
 
-  const sortedItems = [...allItems].sort((a, b) => {
+  const filteredItems = allItems.filter(item => {
+    return item.name.toLowerCase().includes(filterText);
+  });
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
     let valA = a[sortField];
     let valB = b[sortField];
 
@@ -384,6 +390,11 @@ function renderItems() {
     return sortOrder === "asc" ? (valA > valB ? 1 : valA < valB ? -1 : 0)
                                : (valA < valB ? 1 : valA > valB ? -1 : 0);
   });
+
+  if (sortedItems.length === 0) {
+    itemsGrid.innerHTML = `<div class="no-results">No items found matching "${filterText}"</div>`;
+    return;
+  }
 
   sortedItems.forEach((item, index) => {
     let expireStr = "N/A";
@@ -522,6 +533,10 @@ function renderItems() {
 }
 
 // Listen to sort changes
+const searchInput = document.getElementById("itemSearch");
+if (searchInput) {
+    searchInput.addEventListener("input", renderItems);
+}
 document.getElementById("sortField").addEventListener("change", renderItems);
 document.getElementById("sortOrder").addEventListener("change", renderItems);
 

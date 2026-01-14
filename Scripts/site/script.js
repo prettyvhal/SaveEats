@@ -570,7 +570,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (deltaY > 120) {
                 // Success: Close via Manager to keep history in sync
-                modalManager.close(); 
+                qrModal.classList.remove("visible");
+                qrBackdrop.classList.remove("visible");
                 
                 if (typeof window.stopQrScan === "function") window.stopQrScan();
 

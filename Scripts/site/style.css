@@ -2095,6 +2095,17 @@ html {
   transform: var(--clicky);
 }
 
+.search-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--orangeD);
+  border-radius: 8px;
+  font-size: 10px;
+  color: var(--ptext);
+  outline: none;
+  box-sizing: border-box;
+}
+
 .items-filter {
   position: absolute;
   right: 10px;
@@ -3920,7 +3931,8 @@ html {
     justify-content: center;
     gap: 10px;
     transform: scaleX(0.9);
-    margin-bottom: -30px;
+    flex-direction: column;
+    flex: 1;
   }
 
   .items-filter label {
@@ -4119,7 +4131,7 @@ html {
 
 }
 
-@container (max-width: 730px) {
+@container (max-width: 880px) {
   .profile-row {
     flex-direction: column;
     align-items: center;
