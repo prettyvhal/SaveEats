@@ -2628,7 +2628,7 @@ html {
   left: 50%;
   transform: translateX(-50%) translateY(120%);
   width: min(90%, 50vh);
-  height: 50dvh;
+  height: 60dvh;
   max-height: 80dvh;
   background: var(--orangeL1);
   border-radius: var(--radius) var(--radius) 0 0;
@@ -2681,8 +2681,33 @@ html {
   margin-right: auto;
 }
 
+.switch-camera {
+  position: relative;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  padding: 6px;
+  width: 120px;
+  border-radius: 50px;
+  background: var(--orange);
+  border: solid 3px var(--orangeD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.switch-camera:hover {
+  transform: scale(1.05);
+  width: 150px;
+}
+
+.switch-camera:active {
+  transform: scale(1.05);
+  width: 150px;
+}
+
 .qr-center {
   display: flex;
+  position: relative;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -2711,6 +2736,7 @@ html {
 }
 
 .qr-note {
+  margin-bottom: 15px;
   margin-top: 10px;
   color: var(--ptext);
   text-align: center;
@@ -3638,6 +3664,7 @@ html {
 
   .qr-slide-modal {
     width: 100%;
+    height: 55dvh;
   }
 
   .modal-extra-small,

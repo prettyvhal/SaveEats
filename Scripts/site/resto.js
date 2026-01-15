@@ -553,12 +553,78 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let qrScanner = null;
+  let camerasList = [];
+  let currentCameraIndex = 0;
   let scanningActive = false;
   const qrModal = document.getElementById("qrSlideModal");
   const qrBackdrop = document.getElementById("qrBackdrop");
   const scannerBtn = document.getElementById("scannerBtn");
 
   function startQrScan() {
+    if (scanningActive) return;
+
+    scanningActive = true;
+    const qrReaderElem = document.getElementById("qr-reader");
+    qrReaderElem.innerHTML = "";
+
+    qrScanner = new Html5Qrcode("qr-reader");
+
+    Html5Qrcode.getCameras()
+      .then(cameras => {
+        if (!cameras || cameras.length === 0) {
+          showError("No cameras found.");
+          return;
+        }
+
+        camerasList = cameras;
+
+        // Default to back camera if possible
+        currentCameraIndex = cameras.length > 1 ? 1 : 0;
+
+        startCamera(camerasList[currentCameraIndex].id);
+      })
+      .catch(err => {
+        showError("Camera Error:", err);
+      });
+  }
+
+  function startCamera(cameraId) {
+    qrScanner
+      .start(
+        cameraId,
+        {
+          fps: 30,
+          qrbox: 210
+        },
+        (qrCodeMessage) => {
+          try {
+            const data = JSON.parse(qrCodeMessage);
+            handleQrScan(data);
+            closeQrScanner();
+          } catch (e) {
+            closeQrScanner();
+            showError("Invalid QR code format.");
+          }
+        }
+      )
+      .catch(err => {
+        showError("QR Start Error:", err);
+      });
+  }
+
+  document.getElementById("switchCamera").addEventListener("click", () => {
+    if (!qrScanner || camerasList.length < 2) return;
+
+    qrScanner.stop().then(() => {
+      currentCameraIndex =
+        (currentCameraIndex + 1) % camerasList.length;
+
+      startCamera(camerasList[currentCameraIndex].id);
+    });
+  });
+
+
+  /*function startQrScan() {
       if (scanningActive) return;
 
       scanningActive = true;
@@ -594,7 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }).catch(err => {
           showError("Camera Error:", err);
       });
-  }
+  }*/
 
   window.stopQrScan = function() {
     if (!qrScanner) return;

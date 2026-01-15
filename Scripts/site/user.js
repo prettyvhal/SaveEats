@@ -900,10 +900,14 @@ function listenUserProfile() {
       // Handle Agreement Click
       agreeBtn.addEventListener("click", async () => {
         try {
-          await updateDoc(userRef, {
-            agreedToTerms: true,
-            termsAgreedAt: new Date()
-          });
+          await setDoc(
+            userRef,
+            {
+              agreedToTerms: true,
+              termsAgreedAt: new Date()
+            },
+            { merge: true }
+          );
           //modalManager.close([termsModal]);
           termsModal.classList.remove("visible");
           setTimeout(() => {
