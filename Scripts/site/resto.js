@@ -594,7 +594,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cameraId,
         {
           fps: 30,
-          qrbox: 210
+          qrbox: 300
         },
         (qrCodeMessage) => {
           try {

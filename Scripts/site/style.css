@@ -2621,7 +2621,7 @@ html {
 
 /* Centered sliding modal */
 .qr-slide-modal {
-  touch-action: none;
+  touch-action: auto;
   overscroll-behavior: contain;
   position: fixed;
   bottom: 0;
@@ -2693,6 +2693,8 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: auto;
+  z-index: 3000;
 }
 
 .switch-camera:hover {
