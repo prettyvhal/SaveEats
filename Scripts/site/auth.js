@@ -107,8 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
       email: user.email,
       username: user.displayName || snap.data()?.username || "",
       profileImage: user.photoURL || snap.data()?.profileImage || "",
-      type: snap.data()?.type || "user",
-      createdAt: snap.exists() ? snap.data().createdAt : new Date()
+      type: snap.data()?.type || "user"
     }, { merge: true });
   };
 
@@ -129,9 +128,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      // Optional: If on a protected page, send to login
       return;
     }
 
+    // Prevent redirect loops: only redirect if we are on index/signup
     if (!isAuthPage()) return;
 
     try {
@@ -216,7 +217,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await signInWithPopup(auth, provider);
       await handleLoginPostProcess(result.user);
-      
 
     } catch (err) {
       showError("Google Sign-In failed: " + err.message);
@@ -225,12 +225,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Helper to handle Firestore logic after any login type
   async function handleLoginPostProcess(user) {
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-
+    const snap = await getDoc(doc(db, "users", user.uid));
     const type = snap.exists() ? snap.data().type : "user";
+    
     localStorage.setItem("loggedInUserType", type);
-
     await writeOrUpdateUserProfile(user);
   }
 
@@ -277,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const email = document.getElementById("signup-email").value.trim();
       const password = document.getElementById("signup-password").value;
-      const rep = document.getElementById("password-rep").value;
+      const rep = document.getElementById("password_rep").value;
       const username = document.getElementById("signup-username").value.trim();
 
       if (password !== rep) return showError("Passwords do not match");
@@ -287,11 +285,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await setDoc(doc(db, "users", cred.user.uid), {
         email,
         username,
-        type: "user",
-        createdAt: snap.exists() ? snap.data().createdAt : new Date()
+        type: "user"
       });
 
-    localStorage.setItem("loggedInUserType", "user");
+      localStorage.setItem(
+        "loggedInUserType",
+        snap.exists() ? snap.data().type : "user"
+      );
       signUpForm.reset();
     } catch (err) {
       showError(err.message);
@@ -301,8 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------------- RESTO SIGN UP ---------------- */
 
   restoBtn1?.addEventListener("click", () =>
-    //modalManager.open([emailModal])
-    emailModal.classList.add("visible")
+    modalManager.open([emailModal])
   );
 
   restoBtn?.addEventListener("click", async () => {
@@ -319,11 +318,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await setDoc(doc(db, "users", cred.user.uid), {
         email,
         username: name,
-        type: "restaurant",
-        createdAt: snap.exists() ? snap.data().createdAt : new Date()
+        type: "restaurant"
       });
 
-      localStorage.setItem("loggedInUserType", "restaurant");
+      localStorage.setItem(
+        "loggedInUserType",
+        snap.exists() ? snap.data().type : "restaurant"
+      );
       restoForm.reset();
     } catch (err) {
       showError(err.message);
