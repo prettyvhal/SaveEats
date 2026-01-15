@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let dragging = false;
 
         qrModal.addEventListener("pointerdown", (e) => {
-            //if (e.target.closest("[data-ignore-drag]")) return;
+            if (e.target.closest("[data-ignore-drag]")) return;
             if (e.pointerType === "mouse" && e.button !== 0) return;
             startY = e.clientY;
             dragging = true;

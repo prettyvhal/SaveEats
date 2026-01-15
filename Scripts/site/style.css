@@ -2621,7 +2621,7 @@ html {
 
 /* Centered sliding modal */
 .qr-slide-modal {
-  touch-action: auto;
+  touch-action: none;
   overscroll-behavior: contain;
   position: fixed;
   bottom: 0;

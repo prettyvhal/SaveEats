@@ -900,14 +900,34 @@ function listenUserProfile() {
       // Handle Agreement Click
       agreeBtn.addEventListener("click", async () => {
         try {
-          await setDoc(
-            userRef,
-            {
+          const snap = await getDoc(userRef);
+          if (!snap.exists()) {
+            // No user doc at all → create
+            await setDoc(userRef, {
               agreedToTerms: true,
               termsAgreedAt: new Date()
-            },
-            { merge: true }
-          );
+            });
+          } else {
+            const data = snap.data();
+
+            if (data.agreedToTerms === undefined || data.termsAgreedAt === undefined) {
+              // Doc exists but fields missing → add safely
+              await setDoc(
+                userRef,
+                {
+                  agreedToTerms: true,
+                  termsAgreedAt: new Date()
+                },
+                { merge: true }
+              );
+            } else {
+              // Fields already exist → update only
+              await updateDoc(userRef, {
+                agreedToTerms: true,
+                termsAgreedAt: new Date()
+              });
+            }
+          }
           //modalManager.close([termsModal]);
           termsModal.classList.remove("visible");
           setTimeout(() => {
